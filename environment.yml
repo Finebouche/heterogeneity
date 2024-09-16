@@ -8,7 +8,7 @@ dependencies:
   - matplotlib
   - pytorch
   - torchvision
-  - pytorch-cuda=11.8    # [linux]
+  - pytorch-cuda=12.4    # [linux]
   - pip
   - pip:
       - git+https://github.com/Finebouche/neat-python.git # -e ../../other/neat-python

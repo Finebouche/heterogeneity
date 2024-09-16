@@ -1,0 +1,12 @@
+name: neat_het_env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - matplotlib
+  - pytorch
+  - torchvision
+  - pip
+  - pip:
+      - git+https://github.com/Finebouche/neat-python.git # -e ../../other/neat-python
+      - wandb

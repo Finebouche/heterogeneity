@@ -7,9 +7,9 @@ fitness_threshold     = 265.0
 reset_on_extinction   = 0
 
 [DefaultGenome]
-num_inputs              = 24
+num_inputs              = 784
 num_hidden              = 0
-num_outputs             = 4
+num_outputs             = 10
 
 initial_connection      = partial_direct 0.5
 feed_forward            = True
@@ -25,8 +25,8 @@ node_delete_prob        = 0.2
 single_structural_mutation = False
 structural_mutation_surer = True
 
-activation_default      = clamped
-activation_options      = clamped
+activation_default      = tanh
+activation_options      = tanh
 # sigmoid tanh sin gauss relu softplus identity clamped abs hat
 activation_mutate_rate  = 0.0
 

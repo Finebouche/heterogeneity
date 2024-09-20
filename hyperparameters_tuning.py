@@ -1,59 +1,55 @@
 import subprocess
 import json
 import time
-from ray import tune
+import tempfile
+import ray.tune as tune
 
 
-def wait_for_job_and_get_result(job_name, poll_interval=60, timeout=3600):
-    start_time = time.time()
-    while True:
-        job_status = get_job_status(job_name)
+def submit_job(job_definition):
+    # Create a temporary file for the job definition
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+        json.dump(job_definition, temp_file, indent=4)
+        temp_file_name = temp_file.name  # Store the name of the temporary file
 
-        if job_status == 'COMPLETED':
-            accuracy = get_job_result(job_name)
-            return accuracy
-        elif job_status == 'FAILED':
-            print(f"Job {job_name} failed.")
-            return 0
-
-        if time.time() - start_time > timeout:
-            print(f"Job {job_name} timed out.")
-            return 0
-
-        time.sleep(poll_interval)
-
-
-def get_job_status(job_name):
-    cmd = ['gpulab-cli', 'status', job_name, '--json']
+    # Submit the job using gpulab-cli
+    cmd = ['gpulab-cli', 'submit', '--project', 'tanguy_cazalets', temp_file_name]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
-        print(f"Error getting status for job {job_name}: {stderr.decode()}")
-        return 'UNKNOWN'
+        print(f"Error submitting job: {stderr.decode()}")
+        return None
+    else:
+        # Extract job ID from the response
+        print(f"Job submitted successfully: {stdout.decode()}")
+        job_id = extract_job_id(stdout.decode())  # Implement extract_job_id
+        print(job_id)
+        return job_id
 
-    status_info = json.loads(stdout.decode())
-    job_status = status_info.get('status', 'UNKNOWN')
-    return job_status
+
+def extract_job_id(submit_output):
+    # Extract the job ID from the submission output
+    # Assuming the output contains the job ID in a known format
+    # Example logic based on actual gpulab-cli output
+    return submit_output.strip().split()[-1]  # Placeholder logic
 
 
-def get_job_result(job_name):
-    cmd = ['gpulab-cli', 'download', job_name, 'result.json', '--output', f'result_{job_name}.json']
+def wait_for_job(job_id):
+    # Use gpulab-cli wait to wait for job completion
+    cmd = ['gpulab-cli', 'wait', job_id, '--wait-done']
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
-        print(f"Error downloading result for job {job_name}: {stderr.decode()}")
-        return 0
-
-    with open(f'result_{job_name}.json', 'r') as f:
-        result_data = json.load(f)
-    accuracy = result_data.get('accuracy', 0)
-    return accuracy
+        print(f"Error waiting for job {job_id}: {stderr.decode()}")
+        return False
+    else:
+        print(f"Job {job_id} completed successfully")
+        return True
 
 
 def objective(config):
-    job_name = f"ray_tune_job_{int(time.time() * 1000)}"
+    job_name = f"ray_{int(time.time() * 1000)}"
 
     # Prepare hyperparameters
     conn_add_prob = config['conn_add_prob']
@@ -62,55 +58,56 @@ def objective(config):
 
     # Construct the command with hyperparameters
     command = (
-        f"python evolve_script.py "
+        f"/project_ghent/NEAT_HET/neat_het_env/bin/python evolve_script.py "
         f"{conn_add_prob} "
         f"{conn_delete_prob} "
         f"{num_hidden}"
     )
     # Build the job definition
     job_definition = {
-        "jobDefinition": {
             "name": job_name,
-            "description": "Hyperparameter tuning job submitted by Ray Tune",
-            "dockerImage": "gpulab.ilabt.imec.be:5000/sample:nvidia-smi",
-            "environment": {
-                "CONN_ADD_PROB": str(config["conn_add_prob"]),
-                "CONN_DELETE_PROB": str(config["conn_delete_prob"]),
-                "NUM_HIDDEN": str(config["num_hidden"]),
-                # Add other hyperparameters as needed
+            "owner": {
+                "projectUrn": "urn:publicid:IDN+ilabt.imec.be+project+tanguy_cazalets"
             },
-            "command": f"cd /project_ghent/NEAT_HET && source startscript.sh && cd neat-heterogenous && {command}",
-            "resources": {
-                "gpus": 1,
-                "systemMemory": 2000,
-                "cpuCores": 2
-            },
-            "jobDataLocations": [
-                {
-                    "hostPath": "/project_ghent"
+            "request": {
+                "docker": {
+                    "image": "jupyter/tensorflow-notebook",
+                    "command": f"sh -c \"cd /project_ghent/NEAT_HET/neat-heterogeneous && "
+                               f"{command}\"",
+                    "environment": {
+                        "JOB_NAME": f"{job_name}"
+                    },
+                    "storage": [
+                        {
+                            "hostPath": "/project_ghent",
+                            "containerPath": "/project_ghent"
+                        }
+                    ]
+                },
+                "resources": {
+                    "gpus": 0,
+                    "cpus": 4,
+                    "cpuMemoryGb": 10
+                },
+                "scheduling": {
+                    "interactive": False,
+                    "restartable": False,
+                    "minDuration": "14 days",
+                    "maxDuration": "14 days",
+                    "reservationIds": []
+                },
+                "extra": {
+                    "sshPubKeys": [
+                        "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDXdEvo2XUdIf5YbWY0jrIcdxLWb9vbMmBkiEZlKvK8iSG9eJkYAYyVDjEXAQQz/eCW1hpNAiQ5eI2y4xAfOonCZqHb23OsTu2u2fsguKnFwDNBIjz3qGXLK2D3OIHpeZsTlxPjd+tm6Blp+YWpXg6YW+UyqAYPV08Ff53VUHS9MEL318TY7rdSvlKeoed6VfBsuNmxaatCxQuZDz08VzYYl3wLW1TZH5lmulzUcKTzE8F60gK+F3M2EDwdHabFAnxQgcuZCiNSJrvFJyeVHpMnFLwfWawdaS8TO3VBozRv5YszWyNTnW/BK6XIP+soqc9z5BJgkiHl4BSxDKCJ8piP"
+                    ]
                 }
-            ],
-            "portMappings": []
+            }
         }
-    }
 
-    cmd = ['gpulab-cli', 'submit', '--project', 'tanguy_cazalets']
-    job_definition_json = json.dumps(job_definition)
-    process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate(input=job_definition_json.encode())
-
-    if process.returncode != 0:
-        print(f"Error submitting job {job_name}: {stderr.decode()}")
-        tune.report(accuracy=0)
-        return
-
-    print(f"Successfully submitted job {job_name}")
-
-    # Wait for the job to complete and retrieve the result
-    accuracy = wait_for_job_and_get_result(job_name)
-
-    # Report the result back to Ray Tune
-    tune.report(accuracy=accuracy)
+    # Submit the job
+    job_id = submit_job(job_definition)
+    if not job_id:
+        return {"accuracy": 0}
 
 
 if __name__ == '__main__':
@@ -124,14 +121,7 @@ if __name__ == '__main__':
     tuner = tune.Tuner(
         objective,
         param_space=search_space,
-        tune_config=tune.TuneConfig(
-            metric='accuracy',
-            mode='max',
-            max_concurrent_trials=5,
-        ),
     )
 
-    results = tuner.fit()
-    best_result = results.get_best_result(metric='accuracy', mode='max')
-    print(f"Best configuration: {best_result.config}")
-    print(f"Best accuracy: {best_result.metrics['accuracy']}")
+    tuner.fit()
+

@@ -10,30 +10,45 @@ from wandb_reporter import WandbReporter
 
 # Global variables to be initialized in each process
 global_train_loader = None
+global_test_loader = None
 global_device = None
 
 
 def initializer(device, subset_size):
     global global_train_loader
+    global global_test_loader
     global global_device
     global_device = device
 
     # Load MNIST dataset
     transform = transforms.Compose([transforms.ToTensor()])
     train_data = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+    test_data = datasets.MNIST(root='./data', train=False, download=True, transform=transform)
 
-    # Use only a subset of data for evaluation to speed up
+    # Use only a subset of training data to speed up
     indices = torch.randperm(len(train_data))[:subset_size]
     train_subset = torch.utils.data.Subset(train_data, indices)
     global_train_loader = DataLoader(train_subset, batch_size=64, shuffle=True)
 
+    # Use the full test dataset for evaluation
+    global_test_loader = DataLoader(test_data, batch_size=64, shuffle=False)
 
-def evaluate_genome(genome, config):
+
+def evaluate_genome(genome, config, dataset='train'):
     global global_train_loader
+    global global_test_loader
     global global_device
 
     # Create network
     net = neat.nn.FeedForwardNetwork.create(genome, config)
+
+    # Select the appropriate data loader
+    if dataset == 'train':
+        data_loader = global_train_loader
+    elif dataset == 'test':
+        data_loader = global_test_loader
+    else:
+        raise ValueError("dataset must be 'train' or 'test'")
 
     # Evaluation loop
     correct = 0
@@ -41,7 +56,7 @@ def evaluate_genome(genome, config):
     criterion = nn.CrossEntropyLoss()
     total_loss = 0.0
 
-    for data, target in global_train_loader:
+    for data, target in data_loader:
         data = data.view(-1, 28 * 28)  # Flatten the images
         outputs = []
         for sample in data:
@@ -60,8 +75,7 @@ def evaluate_genome(genome, config):
         correct += (predicted == target).sum().item()
 
     # Calculate fitness
-    accuracy = correct / total
-    fitness = accuracy  # Or use -total_loss / len(global_train_loader)
+    fitness = correct / total
     return fitness
 
 
@@ -124,7 +138,7 @@ def run(config_file: str, penalize_inactivity=False, num_generations=None,
     )
 
     print("Configuration ", pop.config.genome_config)
-    # Run until the winner from a generation is able to solve the task
+    # Run the NEAT algorithm
     gen_best = pop.run(pe.evaluate, num_generations)
 
     # Save the best model
@@ -132,6 +146,10 @@ def run(config_file: str, penalize_inactivity=False, num_generations=None,
     os.makedirs(result_path, exist_ok=True)
     with open(os.path.join(result_path, 'best_genome.pickle'), 'wb') as f:
         pickle.dump(gen_best, f)
+
+    # Evaluate the best genome on the test dataset
+    accuracy = evaluate_genome(gen_best, config, dataset='test')
+    return accuracy
 
 
 if __name__ == '__main__':

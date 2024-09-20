@@ -18,8 +18,6 @@ class WandbReporter(BaseReporter):
 
     def start_generation(self, generation):
         self.current_generation = generation
-        # Log the current generation
-        wandb.log({"generation": generation})
 
     def post_evaluate(self, config, population, species, best_genome):
         # Collect fitnesses

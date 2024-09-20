@@ -29,7 +29,8 @@ if __name__ == '__main__':
         print(f"Error converting hyperparameters: {e}")
         sys.exit(1)
 
-    # Create a temporary config f    temp_config_file = create_temp_config_file("config-mnist", hyperparams)ile with these hyperparameters
+    # Create a temporary config file with these hyperparameters
+    temp_config_file = create_temp_config_file("config-mnist", hyperparams)
 
     # Run the NEAT algorithm
     accuracy = run(

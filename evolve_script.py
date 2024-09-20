@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 import re
 import json
@@ -27,13 +28,28 @@ def replace_config_value(config_data, key, value):
 
 
 def main():
-    # Read hyperparameters from environment variables
+    # Read hyperparameters from command-line arguments
+    if len(sys.argv) < 4:
+        print("Usage: python evolve_script.py conn_add_prob conn_delete_prob num_hidden")
+        sys.exit(1)
+
     hyperparams = {
-        'conn_add_prob': os.environ.get('CONN_ADD_PROB'),
-        'conn_delete_prob': os.environ.get('CONN_DELETE_PROB'),
-        'num_hidden': os.environ.get('NUM_HIDDEN'),
+        'conn_add_prob': sys.argv[1],
+        'conn_delete_prob': sys.argv[2],
+        'num_hidden': sys.argv[3],
         # Add other hyperparameters as needed
     }
+
+    # Convert hyperparameters to appropriate types
+    try:
+        hyperparams['conn_add_prob'] = float(hyperparams['conn_add_prob'])
+        hyperparams['conn_delete_prob'] = float(hyperparams['conn_delete_prob'])
+        hyperparams['num_hidden'] = int(hyperparams['num_hidden'])
+        # Convert other hyperparameters as needed
+    except ValueError as e:
+        print(f"Error converting hyperparameters: {e}")
+        sys.exit(1)
+
 
     # Create a temporary config file with these hyperparameters
     temp_config_file = create_temp_config_file("config-mnist", hyperparams)

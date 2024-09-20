@@ -4,6 +4,54 @@ import time
 from ray import tune
 
 
+def wait_for_job_and_get_result(job_name, poll_interval=60, timeout=3600):
+    start_time = time.time()
+    while True:
+        job_status = get_job_status(job_name)
+
+        if job_status == 'COMPLETED':
+            accuracy = get_job_result(job_name)
+            return accuracy
+        elif job_status == 'FAILED':
+            print(f"Job {job_name} failed.")
+            return 0
+
+        if time.time() - start_time > timeout:
+            print(f"Job {job_name} timed out.")
+            return 0
+
+        time.sleep(poll_interval)
+
+
+def get_job_status(job_name):
+    cmd = ['gpulab-cli', 'status', job_name, '--json']
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+
+    if process.returncode != 0:
+        print(f"Error getting status for job {job_name}: {stderr.decode()}")
+        return 'UNKNOWN'
+
+    status_info = json.loads(stdout.decode())
+    job_status = status_info.get('status', 'UNKNOWN')
+    return job_status
+
+
+def get_job_result(job_name):
+    cmd = ['gpulab-cli', 'download', job_name, 'result.json', '--output', f'result_{job_name}.json']
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+
+    if process.returncode != 0:
+        print(f"Error downloading result for job {job_name}: {stderr.decode()}")
+        return 0
+
+    with open(f'result_{job_name}.json', 'r') as f:
+        result_data = json.load(f)
+    accuracy = result_data.get('accuracy', 0)
+    return accuracy
+
+
 def objective(config):
     job_name = f"ray_tune_job_{int(time.time() * 1000)}"
 
@@ -63,54 +111,6 @@ def objective(config):
 
     # Report the result back to Ray Tune
     tune.report(accuracy=accuracy)
-
-
-def wait_for_job_and_get_result(job_name, poll_interval=60, timeout=3600):
-    start_time = time.time()
-    while True:
-        job_status = get_job_status(job_name)
-
-        if job_status == 'COMPLETED':
-            accuracy = get_job_result(job_name)
-            return accuracy
-        elif job_status == 'FAILED':
-            print(f"Job {job_name} failed.")
-            return 0
-
-        if time.time() - start_time > timeout:
-            print(f"Job {job_name} timed out.")
-            return 0
-
-        time.sleep(poll_interval)
-
-
-def get_job_status(job_name):
-    cmd = ['gpulab-cli', 'status', job_name, '--json']
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-
-    if process.returncode != 0:
-        print(f"Error getting status for job {job_name}: {stderr.decode()}")
-        return 'UNKNOWN'
-
-    status_info = json.loads(stdout.decode())
-    job_status = status_info.get('status', 'UNKNOWN')
-    return job_status
-
-
-def get_job_result(job_name):
-    cmd = ['gpulab-cli', 'download', job_name, 'result.json', '--output', f'result_{job_name}.json']
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-
-    if process.returncode != 0:
-        print(f"Error downloading result for job {job_name}: {stderr.decode()}")
-        return 0
-
-    with open(f'result_{job_name}.json', 'r') as f:
-        result_data = json.load(f)
-    accuracy = result_data.get('accuracy', 0)
-    return accuracy
 
 
 if __name__ == '__main__':

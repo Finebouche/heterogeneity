@@ -13,3 +13,4 @@ dependencies:
       - torch
       - torchvision
       - torchaudio
+      - imecilabt-gpulab-cli

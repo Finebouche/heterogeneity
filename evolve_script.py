@@ -1,25 +1,22 @@
-import sys
 import json
 from evolve import run
 from config_utils import create_temp_config_file
-
+import os
+import sys
 
 if __name__ == '__main__':
     # Read hyperparameters from command-line arguments
-    if len(sys.argv) < 5:
-        print("Usage: python evolve_script.py conn_add_prob conn_delete_prob num_hidden activation_options")
-        sys.exit(1)
-
-    # Convert hyperparameters to appropriate types
-    print(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     try:
         hyperparams = {
-            'conn_add_prob': float(sys.argv[1]),
-            'conn_delete_prob': float(sys.argv[2]),
-            'num_hidden': int(sys.argv[3]),
-            'activation_options': str(sys.argv[4])
+            'conn_add_prob': float(os.environ['CONN_ADD_PROB']),
+            'conn_delete_prob': float(os.environ['CONN_DELETE_PROB']),
+            'num_hidden': int(os.environ['NUM_HIDDEN']),
+            'activation_options': os.environ['ACTIVATION_OPTIONS']
             # Add other hyperparameters as needed
         }
+    except KeyError as e:
+        print(f"Environment variable {e} not found.")
+        sys.exit(1)
     except ValueError as e:
         print(f"Error converting hyperparameters: {e}")
         sys.exit(1)

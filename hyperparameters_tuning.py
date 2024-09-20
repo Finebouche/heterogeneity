@@ -54,51 +54,57 @@ def objective(config):
     # Construct the command with hyperparameters
     command = (
         f"/project_ghent/NEAT_HET/neat_het_env/bin/python evolve_script.py "
-        f"{config['conn_add_prob']} "
-        f"{config['conn_delete_prob']} "
-        f"{config['num_hidden']} "
-        f"{config['activation_options']} "
+        # f"{config['conn_add_prob']} "
+        # f"{config['conn_delete_prob']} "
+        # f"{config['num_hidden']} "
+        # f"{config['activation_options']} "
     )
     # Build the job definition
     job_definition = {
-            "name": job_name,
-            "owner": {
-                "projectUrn": "urn:publicid:IDN+ilabt.imec.be+project+tanguy_cazalets"
+        "name": job_name,
+        "owner": {
+            "projectUrn": "urn:publicid:IDN+ilabt.imec.be+project+tanguy_cazalets"
+        },
+        "environment": {
+            "CONN_ADD_PRO": f"{config['conn_add_prob']}",
+            "CONN_DELETE_PROB": f"{config['conn_delete_prob']}",
+            "NUM_HIDDEN": f"{config['num_hidden']}",
+            "ACTIVATION_OPTIONS": f"{config['activation_options']}",
+        },
+        "request": {
+            "docker": {
+                "image": "jupyter/tensorflow-notebook",
+                "command": f"sh -c \"cd /project_ghent/NEAT_HET/neat-heterogeneous && "
+                           f"{command}\"",
+                "environment": {
+                    "JOB_NAME": f"{job_name}"
+                },
+                "storage": [
+                    {
+                        "hostPath": "/project_ghent",
+                        "containerPath": "/project_ghent"
+                    }
+                ]
             },
-            "request": {
-                "docker": {
-                    "image": "jupyter/tensorflow-notebook",
-                    "command": f"sh -c \"cd /project_ghent/NEAT_HET/neat-heterogeneous && "
-                               f"{command}\"",
-                    "environment": {
-                        "JOB_NAME": f"{job_name}"
-                    },
-                    "storage": [
-                        {
-                            "hostPath": "/project_ghent",
-                            "containerPath": "/project_ghent"
-                        }
-                    ]
-                },
-                "resources": {
-                    "gpus": 0,
-                    "cpus": 4,
-                    "cpuMemoryGb": 10
-                },
-                "scheduling": {
-                    "interactive": False,
-                    "restartable": False,
-                    "minDuration": "14 days",
-                    "maxDuration": "14 days",
-                    "reservationIds": []
-                },
-                "extra": {
-                    "sshPubKeys": [
-                        "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDXdEvo2XUdIf5YbWY0jrIcdxLWb9vbMmBkiEZlKvK8iSG9eJkYAYyVDjEXAQQz/eCW1hpNAiQ5eI2y4xAfOonCZqHb23OsTu2u2fsguKnFwDNBIjz3qGXLK2D3OIHpeZsTlxPjd+tm6Blp+YWpXg6YW+UyqAYPV08Ff53VUHS9MEL318TY7rdSvlKeoed6VfBsuNmxaatCxQuZDz08VzYYl3wLW1TZH5lmulzUcKTzE8F60gK+F3M2EDwdHabFAnxQgcuZCiNSJrvFJyeVHpMnFLwfWawdaS8TO3VBozRv5YszWyNTnW/BK6XIP+soqc9z5BJgkiHl4BSxDKCJ8piP"
-                    ]
-                }
+            "resources": {
+                "gpus": 0,
+                "cpus": 4,
+                "cpuMemoryGb": 10
+            },
+            "scheduling": {
+                "interactive": False,
+                "restartable": False,
+                "minDuration": "14 days",
+                "maxDuration": "14 days",
+                "reservationIds": []
+            },
+            "extra": {
+                "sshPubKeys": [
+                    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDXdEvo2XUdIf5YbWY0jrIcdxLWb9vbMmBkiEZlKvK8iSG9eJkYAYyVDjEXAQQz/eCW1hpNAiQ5eI2y4xAfOonCZqHb23OsTu2u2fsguKnFwDNBIjz3qGXLK2D3OIHpeZsTlxPjd+tm6Blp+YWpXg6YW+UyqAYPV08Ff53VUHS9MEL318TY7rdSvlKeoed6VfBsuNmxaatCxQuZDz08VzYYl3wLW1TZH5lmulzUcKTzE8F60gK+F3M2EDwdHabFAnxQgcuZCiNSJrvFJyeVHpMnFLwfWawdaS8TO3VBozRv5YszWyNTnW/BK6XIP+soqc9z5BJgkiHl4BSxDKCJ8piP"
+                ]
             }
         }
+    }
 
     # Submit the job
     job_id = submit_job(job_definition)
@@ -106,10 +112,10 @@ def objective(config):
 
 if __name__ == '__main__':
     search_space = {
-        'conn_add_prob': tune.grid_search([0.1, 0.2, 0.3]),
-        'conn_delete_prob': tune.grid_search([0.1, 0.2, 0.3]),
-        'num_hidden': tune.choice([0, 1, 2]),
-        'activation_options': tune.choice(['tanh', 'sigmoid tanh sin gauss relu softplus identity clamped abs hat'])
+        'conn_add_prob': tune.grid_search([0.1]),
+        'conn_delete_prob': tune.grid_search([0.1]),
+        'num_hidden': tune.choice([0]),
+        'activation_options': tune.choice(['tanh', "'sigmoid tanh sin gauss relu softplus identity clamped abs hat'"])
     }
 
     tuner = tune.Tuner(

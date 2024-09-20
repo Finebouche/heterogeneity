@@ -56,8 +56,8 @@ def objective(config):
         f"/project_ghent/NEAT_HET/neat_het_env/bin/python evolve_script.py "
         f"{config['conn_add_prob']} "
         f"{config['conn_delete_prob']} "
-        f"{config['num_hidden']}"
-        f"{config['activation_options']}"
+        f"{config['num_hidden']} "
+        f"{config['activation_options']} "
     )
     # Build the job definition
     job_definition = {

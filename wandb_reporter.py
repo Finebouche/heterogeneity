@@ -4,9 +4,10 @@ import numpy as np
 
 
 class WandbReporter(BaseReporter):
-    def __init__(self, project_name, tags=None, api_key=None):
+    def __init__(self, project_name, config, tags=None, api_key=None):
         super().__init__()
         self.project_name = project_name
+        self.config = config
         self.tags = tags
         self.current_generation = None
 
@@ -14,7 +15,7 @@ class WandbReporter(BaseReporter):
         if api_key is not None:
             wandb.login(key=api_key)
         # Initialize wandb run
-        wandb.init(project=self.project_name, tags=self.tags)
+        wandb.init(project=self.project_name, config=self.config, tags=self.tags)
 
     def start_generation(self, generation):
         self.current_generation = generation

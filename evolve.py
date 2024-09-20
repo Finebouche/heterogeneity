@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
 from wandb_reporter import WandbReporter
+from config_utils import config_to_dict
 
 # Global variables to be initialized in each process
 global_train_loader = None
@@ -96,7 +97,8 @@ class MyParallelEvaluator(object):
 
 
 def run(config_file: str, penalize_inactivity=False, num_generations=None,
-        checkpoint=None, num_tests=5, num_cores=1, subset_size=1000):
+        checkpoint=None, num_tests=5, num_cores=1, subset_size=1000,
+        wandb_project_name=None):
     # Load the config file
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -108,18 +110,20 @@ def run(config_file: str, penalize_inactivity=False, num_generations=None,
     else:
         pop = neat.Population(config)
 
-    # Read wandb API key from file (if needed)
-    with open("wandb_api_key.txt", "r") as f:
-        wandb_key = f.read().strip()
+    if wandb_project_name is not None:
+        with open("wandb_api_key.txt", "r") as f:
+            wandb_key = f.read().strip()
 
-    # Initialize WandbReporter correctly
-    wandb_reporter = WandbReporter(
-        project_name="mnist-neat",
-        tags=["neat", "MNIST"],
-        api_key=wandb_key  # Omit this line if you're already logged in to wandb
-    )
+        # load the config file to pass it to wandb
+        config_dict = config_to_dict(config_file)
+        wandb_reporter = WandbReporter(
+            project_name=wandb_project_name,
+            config=config_dict,
+            tags=["neat", "MNIST"],
+            api_key=wandb_key  # Omit this line if you're already logged in to wandb
+        )
+        pop.add_reporter(wandb_reporter)
 
-    pop.add_reporter(wandb_reporter)
     pop.add_reporter(neat.StdOutReporter(True))
     pop.add_reporter(neat.Checkpointer(
         generation_interval=int(num_generations / 10),
@@ -158,5 +162,6 @@ if __name__ == '__main__':
         num_generations=100,
         num_tests=2,
         num_cores=multiprocessing.cpu_count(),
-        subset_size=1000  # Adjust as needed
-        )
+        subset_size=1000,
+        wandb_project_name="neat-mnist"
+    )

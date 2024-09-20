@@ -29,8 +29,7 @@ if __name__ == '__main__':
         print(f"Error converting hyperparameters: {e}")
         sys.exit(1)
 
-    # Create a temporary config file with these hyperparameters
-    temp_config_file = create_temp_config_file("config-mnist", hyperparams)
+    # Create a temporary config f    temp_config_file = create_temp_config_file("config-mnist", hyperparams)ile with these hyperparameters
 
     # Run the NEAT algorithm
     accuracy = run(
@@ -39,7 +38,8 @@ if __name__ == '__main__':
         num_generations=100,
         num_tests=2,
         num_cores=1,
-        subset_size=1000
+        subset_size=1000,
+        wandb_project_name = "neat-mnist"
     )
     results = {"accuracy": accuracy}
     print(json.dumps(results))

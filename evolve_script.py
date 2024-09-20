@@ -1,6 +1,4 @@
 import sys
-import tempfile
-import re
 import json
 from evolve import run
 from config_utils import create_temp_config_file
@@ -8,23 +6,19 @@ from config_utils import create_temp_config_file
 
 if __name__ == '__main__':
     # Read hyperparameters from command-line arguments
-    if len(sys.argv) < 4:
-        print("Usage: python evolve_script.py conn_add_prob conn_delete_prob num_hidden")
+    if len(sys.argv) < 5:
+        print("Usage: python evolve_script.py conn_add_prob conn_delete_prob num_hidden activation_options")
         sys.exit(1)
-
-    hyperparams = {
-        'conn_add_prob': sys.argv[1],
-        'conn_delete_prob': sys.argv[2],
-        'num_hidden': sys.argv[3],
-        # Add other hyperparameters as needed
-    }
 
     # Convert hyperparameters to appropriate types
     try:
-        hyperparams['conn_add_prob'] = float(hyperparams['conn_add_prob'])
-        hyperparams['conn_delete_prob'] = float(hyperparams['conn_delete_prob'])
-        hyperparams['num_hidden'] = int(hyperparams['num_hidden'])
-        # Convert other hyperparameters as needed
+        hyperparams = {
+            'conn_add_prob': float(sys.argv[1]),
+            'conn_delete_prob': float(sys.argv[2]),
+            'num_hidden': int(sys.argv[3]),
+            'activation_options': str(sys.argv[4])
+            # Add other hyperparameters as needed
+        }
     except ValueError as e:
         print(f"Error converting hyperparameters: {e}")
         sys.exit(1)

@@ -51,17 +51,13 @@ def wait_for_job(job_id):
 def objective(config):
     job_name = f"ray_{int(time.time() * 1000)}"
 
-    # Prepare hyperparameters
-    conn_add_prob = config['conn_add_prob']
-    conn_delete_prob = config['conn_delete_prob']
-    num_hidden = config['num_hidden']
-
     # Construct the command with hyperparameters
     command = (
         f"/project_ghent/NEAT_HET/neat_het_env/bin/python evolve_script.py "
-        f"{conn_add_prob} "
-        f"{conn_delete_prob} "
-        f"{num_hidden}"
+        f"{config['conn_add_prob']} "
+        f"{config['conn_delete_prob']} "
+        f"{config['num_hidden']}"
+        f"{config['activation_options']}"
     )
     # Build the job definition
     job_definition = {
@@ -106,8 +102,6 @@ def objective(config):
 
     # Submit the job
     job_id = submit_job(job_definition)
-    if not job_id:
-        return {"accuracy": 0}
 
 
 if __name__ == '__main__':
@@ -115,7 +109,10 @@ if __name__ == '__main__':
         'conn_add_prob': tune.grid_search([0.1, 0.2, 0.3]),
         'conn_delete_prob': tune.grid_search([0.1, 0.2, 0.3]),
         'num_hidden': tune.choice([0, 1, 2]),
-        # Add other hyperparameters as needed
+        # Following parameter is
+        # activation_options      = tanh
+        # or sigmoid tanh sin gauss relu softplus identity clamped abs hat
+        'activation_options': tune.choice(['sigmoid tanh sin gauss relu softplus identity clamped abs hat'])
     }
 
     tuner = tune.Tuner(

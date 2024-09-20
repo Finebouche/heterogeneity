@@ -109,10 +109,7 @@ if __name__ == '__main__':
         'conn_add_prob': tune.grid_search([0.1, 0.2, 0.3]),
         'conn_delete_prob': tune.grid_search([0.1, 0.2, 0.3]),
         'num_hidden': tune.choice([0, 1, 2]),
-        # Following parameter is
-        # activation_options      = tanh
-        # or sigmoid tanh sin gauss relu softplus identity clamped abs hat
-        'activation_options': tune.choice(['sigmoid tanh sin gauss relu softplus identity clamped abs hat'])
+        'activation_options': tune.choice(['tanh', 'sigmoid tanh sin gauss relu softplus identity clamped abs hat'])
     }
 
     tuner = tune.Tuner(

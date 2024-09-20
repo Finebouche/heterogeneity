@@ -11,6 +11,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Convert hyperparameters to appropriate types
+    print(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     try:
         hyperparams = {
             'conn_add_prob': float(sys.argv[1]),

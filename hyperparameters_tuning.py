@@ -2,7 +2,7 @@ import subprocess
 import json
 import time
 import tempfile
-import ray.tune as tune
+import wandb
 
 
 def submit_job(job_definition):
@@ -48,12 +48,12 @@ def wait_for_job(job_id):
         return True
 
 
-def objective(config):
+def objective(config, sweep_id=None):
     job_name = f"ray_{int(time.time() * 1000)}"
 
     # Construct the command with hyperparameters
     command = (
-        f"/project_ghent/NEAT_HET/neat_het_env/bin/python evolve_script.py "
+        f"/project_ghent/NEAT_HET/neat_het_env/bin/python local_tuning_script.py "
         # f"{config['conn_add_prob']} "
         # f"{config['conn_delete_prob']} "
         # f"{config['num_hidden']} "
@@ -65,19 +65,17 @@ def objective(config):
         "owner": {
             "projectUrn": "urn:publicid:IDN+ilabt.imec.be+project+tanguy_cazalets"
         },
-        "environment": {
-            "CONN_ADD_PRO": f"{config['conn_add_prob']}",
-            "CONN_DELETE_PROB": f"{config['conn_delete_prob']}",
-            "NUM_HIDDEN": f"{config['num_hidden']}",
-            "ACTIVATION_OPTIONS": f"{config['activation_options']}",
-        },
         "request": {
             "docker": {
                 "image": "jupyter/tensorflow-notebook",
                 "command": f"sh -c \"cd /project_ghent/NEAT_HET/neat-heterogeneous && "
                            f"{command}\"",
                 "environment": {
-                    "JOB_NAME": f"{job_name}"
+                    "CONN_ADD_PROB": str(config['conn_add_prob']),
+                    "CONN_DELETE_PROB": str(config['conn_delete_prob']),
+                    "NUM_HIDDEN": str(config['num_hidden']),
+                    "ACTIVATION_OPTIONS": f"{config['activation_options']}",
+                    "SWEEP_ID": sweep_id,
                 },
                 "storage": [
                     {
@@ -106,22 +104,43 @@ def objective(config):
         }
     }
 
+    print(job_definition['request']['docker']['environment'])
+
     # Submit the job
     job_id = submit_job(job_definition)
 
 
 if __name__ == '__main__':
-    search_space = {
-        'conn_add_prob': tune.grid_search([0.1]),
-        'conn_delete_prob': tune.grid_search([0.1]),
-        'num_hidden': tune.choice([0]),
-        'activation_options': tune.choice(['tanh', "'sigmoid tanh sin gauss relu softplus identity clamped abs hat'"])
+    # from itertools import product
+    #
+    # search_space = {
+    #     'conn_add_prob': [0.1, 0.2, 0.3],
+    #     'conn_delete_prob': [0.1, 0.2, 0.3],
+    #     'num_hidden': [0, 2, 4],
+    #     'activation_options': ['tanh', "sigmoid tanh sin gauss relu softplus identity clamped abs hat"]
+    # }
+    #
+    # keys, values = zip(*search_space.items())
+    # experiments = [dict(zip(keys, v)) for v in product(*values)]
+
+    sweep_configuration = {
+        "method": "grid",
+        "parameters": {
+            "conn_add_prob": {"values": [0.1]},
+            "conn_delete_prob": {"values": [0.1]},
+            "num_hidden": {"values": [0]},
+            "activation_options": {
+                "values": [
+                    'tanh',
+                    "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
+                ]
+            },
+        },
     }
 
-    tuner = tune.Tuner(
-        objective,
-        param_space=search_space,
-    )
+    # Initialize the sweep
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project="my-first-sweep")
 
-    tuner.fit()
+    for config in experiments:
+        objective(config)
 

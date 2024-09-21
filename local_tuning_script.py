@@ -3,6 +3,7 @@ from evolve import run
 from config_utils import create_temp_config_file
 import os
 import sys
+import wandb
 
 if __name__ == '__main__':
     # Read hyperparameters from command-line arguments
@@ -21,18 +22,21 @@ if __name__ == '__main__':
         print(f"Error converting hyperparameters: {e}")
         sys.exit(1)
 
-    # Create a temporary config file with these hyperparameters
-    temp_config_file = create_temp_config_file("config-mnist", hyperparams)
 
-    # Run the NEAT algorithm
-    accuracy = run(
-        config_file=temp_config_file,
-        penalize_inactivity=False,
-        num_generations=100,
-        num_tests=2,
-        num_cores=1,
-        subset_size=1000,
-        wandb_project_name = "neat-mnist"
-    )
-    results = {"accuracy": accuracy}
-    print(json.dumps(results))
+    def main():
+        # Create a temporary config file with these hyperparameters
+        temp_config_file = create_temp_config_file("config-mnist", hyperparams)
+
+        # Run the NEAT algorithm
+        score = run(
+            config_file=temp_config_file,
+            penalize_inactivity=False,
+            num_generations=100,
+            num_tests=2,
+            num_cores=1,
+            subset_size=1000,
+            wandb_project_name = "neat-mnist"
+        )
+        wandb.log({"score": score})
+
+    wandb.agent(os.environ['SWEEP_ID'], function=main, count=1)

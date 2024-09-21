@@ -28,7 +28,7 @@ structural_mutation_surer = True
 activation_default      = tanh
 activation_options      = tanh
 # sigmoid tanh sin gauss relu softplus identity clamped abs hat
-activation_mutate_rate  = 0.0
+activation_mutate_rate  = 0.2
 
 aggregation_default     = sum
 aggregation_options     = sum

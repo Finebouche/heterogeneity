@@ -1,7 +1,7 @@
 import wandb
 from neat.reporting import BaseReporter
 import numpy as np
-
+import neat
 
 class WandbReporter(BaseReporter):
     def __init__(self, project_name, config, tags=None, api_key=None):
@@ -28,15 +28,25 @@ class WandbReporter(BaseReporter):
         min_fitness = np.min(fitnesses)
         std_fitness = np.std(fitnesses)
 
+        network_sizes = [len(genome.nodes) for genome in population.values()]
+        avg_network_size = np.mean(network_sizes)
+        max_network_size = np.max(network_sizes)
+        min_network_size = np.min(network_sizes)
+        std_network_size = np.std(network_sizes)
+
         # Log the statistics
         wandb.log({
             "generation": self.current_generation,
-            "best_genome_fitness": best_genome.fitness,
-            "avg_fitness": avg_fitness,
-            "max_fitness": max_fitness,
-            "min_fitness": min_fitness,
-            "std_fitness": std_fitness,
-            "species_count": len(species.species)
+            "species_count": len(species.species),
+            "fitness/best_genome_fitness": best_genome.fitness,
+            "fitness/avg": avg_fitness,
+            "fitness/max": max_fitness,
+            "fitness/min": min_fitness,
+            "fitness/std": std_fitness,
+            "network_size/avg": avg_network_size,
+            "network_size/max": max_network_size,
+            "network_size/min": min_network_size,
+            "network_size/std": std_network_size,
         })
 
     def end_generation(self, config, population, species_set):

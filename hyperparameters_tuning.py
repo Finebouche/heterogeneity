@@ -114,9 +114,9 @@ if __name__ == '__main__':
     from itertools import product
 
     search_space = {
-        'conn_add_prob': [0.1, 0.2, 0.3],
-        'conn_delete_prob': [0.1, 0.2, 0.3],
-        'num_hidden': [0, 2, 4],
+        'conn_add_prob': [0.1],
+        'conn_delete_prob': [0.1],
+        'num_hidden': [2],
         'activation_options': [
             'tanh',
             "sigmoid tanh sin gauss relu softplus identity clamped abs hat"

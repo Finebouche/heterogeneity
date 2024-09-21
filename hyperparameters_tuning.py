@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     # Optional: Initialize a sweep configuration in wandb
     sweep_configuration = {
-        "name": "my-first-sweep",
+        "name": "sweep-mnist",
         "method": "grid",
         "parameters": {
             "conn_add_prob": {"values": search_space['conn_add_prob']},

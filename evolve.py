@@ -159,7 +159,7 @@ def run(config_file: str, penalize_inactivity=False, num_generations=None,
 if __name__ == '__main__':
     run(config_file="config-mnist",
         penalize_inactivity=False,
-        num_generations=100,
+        num_generations=1000,
         num_tests=2,
         num_cores=multiprocessing.cpu_count(),
         subset_size=1000,

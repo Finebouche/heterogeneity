@@ -23,8 +23,6 @@ class WandbReporter(BaseReporter):
     def post_evaluate(self, config, population, species, best_genome):
         fitnesses = [genome.fitness for genome in population.values()]
         avg_fitness = np.mean(fitnesses)
-        max_fitness = np.max(fitnesses)
-        min_fitness = np.min(fitnesses)
         std_fitness = np.std(fitnesses)
 
         network_sizes = [len(genome.nodes) for genome in population.values()]
@@ -37,10 +35,9 @@ class WandbReporter(BaseReporter):
         wandb.log({
             "generation": self.current_generation,
             "species_count": len(species.species),
-            "fitness/best_genome_fitness": best_genome.fitness,
+            "best_genome/fitness": best_genome.fitness,
+            "best_genome/network_size": len(best_genome.nodes),
             "fitness/avg": avg_fitness,
-            "fitness/max": max_fitness,
-            "fitness/min": min_fitness,
             "fitness/std": std_fitness,
             "network_size/avg": avg_network_size,
             "network_size/max": max_network_size,

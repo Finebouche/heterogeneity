@@ -11,7 +11,8 @@ if __name__ == '__main__':
             'conn_add_prob': float(os.environ['CONN_ADD_PROB']),
             'conn_delete_prob': float(os.environ['CONN_DELETE_PROB']),
             'num_hidden': int(os.environ['NUM_HIDDEN']),
-            'activation_options': os.environ['ACTIVATION_OPTIONS']
+            'activation_options': os.environ['ACTIVATION_OPTIONS'],
+            'activation_mutate_rate': os.environ['ACTIVATION_MUTATE_RATE']
             # Add other hyperparameters as needed
         }
     except KeyError as e:

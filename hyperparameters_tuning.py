@@ -74,6 +74,7 @@ def objective(config, sweep_id=None):
                     "CONN_DELETE_PROB": str(config['conn_delete_prob']),
                     "NUM_HIDDEN": str(config['num_hidden']),
                     "ACTIVATION_OPTIONS": f"{config['activation_options']}",
+                    "ACTIVATION_MUTATE_RATE": f"{config['activation_mutate_rate']}",
                     "SWEEP_ID": sweep_id,
                 },
                 "storage": [
@@ -117,7 +118,8 @@ if __name__ == '__main__':
         'activation_options': [
             'tanh',
             "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
-        ]
+        ],
+        'activation_mutate_rate': [0.1, 0.2]
     }
 
     # Generate all combinations of hyperparameters
@@ -133,6 +135,7 @@ if __name__ == '__main__':
             "conn_delete_prob": {"values": search_space['conn_delete_prob']},
             "num_hidden": {"values": search_space['num_hidden']},
             "activation_options": {"values": search_space['activation_options']},
+            "activation_mutate_rate": {"values": search_space['activation_mutate_rate']},
         },
     }
 

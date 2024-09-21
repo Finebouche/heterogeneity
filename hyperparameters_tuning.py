@@ -111,9 +111,9 @@ if __name__ == '__main__':
     from itertools import product
 
     search_space = {
-        'conn_add_prob': [0.1],
+        'conn_add_prob': [0.1, 0.2],
         'conn_delete_prob': [0.1],
-        'num_hidden': [2],
+        'num_hidden': [2, 4],
         'activation_options': [
             'tanh',
             "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     }
 
     # Initialize the sweep
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project="neat-mnist")
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project="neat-mnist", entity="tcazalet_airo")
     print(f"Sweep ID: {sweep_id}")
 
     for config in experiments:

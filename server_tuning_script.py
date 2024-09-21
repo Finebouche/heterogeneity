@@ -42,4 +42,4 @@ if __name__ == '__main__':
         wandb_key = f.read().strip()
     wandb.login(key=wandb_key)
 
-    wandb.agent(os.environ['SWEEP_ID'], function=main)
+    wandb.agent(os.environ['SWEEP_ID'], function=main, project="neat-mnist", entity="tcazalet_airo")

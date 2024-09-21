@@ -23,7 +23,6 @@ def submit_job(job_definition):
         # Extract job ID from the response
         print(f"Job submitted successfully: {stdout.decode()}")
         job_id = extract_job_id(stdout.decode())  # Implement extract_job_id
-        print(job_id)
         return job_id
 
 
@@ -104,8 +103,6 @@ def objective(config, sweep_id=None):
         }
     }
 
-    print(job_definition['request']['docker']['environment'])
-
     # Submit the job
     job_id = submit_job(job_definition)
 
@@ -140,7 +137,8 @@ if __name__ == '__main__':
     }
 
     # Initialize the sweep
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project="my-first-sweep")
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project="neat-mnist")
+    print(f"Sweep ID: {sweep_id}")
 
     for config in experiments:
         objective(config, sweep_id)

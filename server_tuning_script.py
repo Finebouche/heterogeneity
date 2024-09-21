@@ -1,4 +1,3 @@
-import json
 from evolve import run
 from config_utils import create_temp_config_file
 import os
@@ -39,4 +38,4 @@ if __name__ == '__main__':
         )
         wandb.log({"score": score})
 
-    wandb.agent(os.environ['SWEEP_ID'], function=main, count=1)
+    wandb.agent(os.environ['SWEEP_ID'], function=main)

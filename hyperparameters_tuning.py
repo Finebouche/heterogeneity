@@ -53,7 +53,7 @@ def objective(config, sweep_id=None):
 
     # Construct the command with hyperparameters
     command = (
-        f"/project_ghent/NEAT_HET/neat_het_env/bin/python local_tuning_script.py "
+        f"/project_ghent/NEAT_HET/neat_het_env/bin/python server_tuning_script.py "
         # f"{config['conn_add_prob']} "
         # f"{config['conn_delete_prob']} "
         # f"{config['num_hidden']} "
@@ -111,30 +111,31 @@ def objective(config, sweep_id=None):
 
 
 if __name__ == '__main__':
-    # from itertools import product
-    #
-    # search_space = {
-    #     'conn_add_prob': [0.1, 0.2, 0.3],
-    #     'conn_delete_prob': [0.1, 0.2, 0.3],
-    #     'num_hidden': [0, 2, 4],
-    #     'activation_options': ['tanh', "sigmoid tanh sin gauss relu softplus identity clamped abs hat"]
-    # }
-    #
-    # keys, values = zip(*search_space.items())
-    # experiments = [dict(zip(keys, v)) for v in product(*values)]
+    from itertools import product
 
+    search_space = {
+        'conn_add_prob': [0.1, 0.2, 0.3],
+        'conn_delete_prob': [0.1, 0.2, 0.3],
+        'num_hidden': [0, 2, 4],
+        'activation_options': [
+            'tanh',
+            "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
+        ]
+    }
+
+    # Generate all combinations of hyperparameters
+    keys, values = zip(*search_space.items())
+    experiments = [dict(zip(keys, v)) for v in product(*values)]
+
+    # Optional: Initialize a sweep configuration in wandb
     sweep_configuration = {
+        "name": "my-first-sweep",
         "method": "grid",
         "parameters": {
-            "conn_add_prob": {"values": [0.1]},
-            "conn_delete_prob": {"values": [0.1]},
-            "num_hidden": {"values": [0]},
-            "activation_options": {
-                "values": [
-                    'tanh',
-                    "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
-                ]
-            },
+            "conn_add_prob": {"values": search_space['conn_add_prob']},
+            "conn_delete_prob": {"values": search_space['conn_delete_prob']},
+            "num_hidden": {"values": search_space['num_hidden']},
+            "activation_options": {"values": search_space['activation_options']},
         },
     }
 

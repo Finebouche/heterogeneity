@@ -1,7 +1,7 @@
 import wandb
 from neat.reporting import BaseReporter
 import numpy as np
-import neat
+
 
 class WandbReporter(BaseReporter):
     def __init__(self, project_name, config, tags=None, api_key=None):
@@ -21,7 +21,6 @@ class WandbReporter(BaseReporter):
         self.current_generation = generation
 
     def post_evaluate(self, config, population, species, best_genome):
-        # Collect fitnesses
         fitnesses = [genome.fitness for genome in population.values()]
         avg_fitness = np.mean(fitnesses)
         max_fitness = np.max(fitnesses)

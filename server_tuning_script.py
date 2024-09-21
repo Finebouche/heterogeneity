@@ -38,4 +38,8 @@ if __name__ == '__main__':
         )
         wandb.log({"score": score})
 
+    with open("wandb_api_key.txt", "r") as f:
+        wandb_key = f.read().strip()
+    wandb.login(key=wandb_key)
+
     wandb.agent(os.environ['SWEEP_ID'], function=main)

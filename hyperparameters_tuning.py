@@ -143,5 +143,5 @@ if __name__ == '__main__':
     sweep_id = wandb.sweep(sweep=sweep_configuration, project="my-first-sweep")
 
     for config in experiments:
-        objective(config)
+        objective(config, sweep_id)
 

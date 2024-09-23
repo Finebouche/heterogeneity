@@ -33,7 +33,7 @@ if __name__ == '__main__':
         score = run(
             config_file=temp_config_file,
             penalize_inactivity=False,
-            num_generations=1000,
+            num_generations=300,
             num_tests=2,
             num_cores=1,
             subset_size=1000,

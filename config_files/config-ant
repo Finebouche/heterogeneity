@@ -42,19 +42,19 @@ bias_init_stdev         = 1.0
 bias_replace_rate       = 0.02
 bias_mutate_rate        = 0.8
 bias_mutate_power       = 0.4
-bias_max_value          = 30.0
-bias_min_value          = -30.0
+bias_max_value          = 10.0
+bias_min_value          = -10.0
 
 response_init_mean      = 1.0
 response_init_stdev     = 0.0
 response_replace_rate   = 0.0
 response_mutate_rate    = 0.0
 response_mutate_power   = 0.0
-response_max_value      = 30.0
-response_min_value      = -30.0
+response_max_value      = 20.0
+response_min_value      = -20.0
 
-weight_max_value        = 30
-weight_min_value        = -30
+weight_max_value        = 10
+weight_min_value        = -10
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
 weight_mutate_rate      = 0.8

@@ -62,17 +62,23 @@ def gym_evaluate_genome(genome, config):
     return total_reward / global_num_episodes
 
 
-def create_video_log_function(env_spec_id, env_kwargs, visualisation_interval=50):
-    def video_log_function(current_generation, best_genome, config):
+
+class VideoLogFunction:
+    def __init__(self, env_spec_id, env_kwargs, visualisation_interval=50):
+        self.env_spec_id = env_spec_id
+        self.env_kwargs = env_kwargs
+        self.visualisation_interval = visualisation_interval
+
+    def __call__(self, current_generation, best_genome, config):
         # Decide whether to log the video based on the generation interval
-        if current_generation % visualisation_interval == 0:
+        if current_generation % self.visualisation_interval == 0:
             # Create the environment with render_mode='rgb_array' for video recording
-            env = gymnasium.make(env_spec_id, **env_kwargs, render_mode='rgb_array')
+            env = gymnasium.make(self.env_spec_id, **self.env_kwargs, render_mode='rgb_array')
             net = neat.nn.FeedForwardNetwork.create(best_genome, config)
             observation, _ = env.reset()
             frames = []
             done = False
-
+            step = 0
             while not done:
                 if isinstance(env.action_space, gymnasium.spaces.Discrete):
                     action = np.argmax(net.activate(observation))
@@ -82,15 +88,14 @@ def create_video_log_function(env_spec_id, env_kwargs, visualisation_interval=50
                 frame = env.render()
                 frames.append(frame.transpose(2, 0, 1))  # Adjust dimensions for wandb.Video
                 done = terminated or truncated
+                step += 1
+            print(f"Generation {current_generation}: Video recorded with {step} steps")
 
             numpy_array_video = np.array(frames)
 
             return numpy_array_video
         else:
             return None
-
-    return video_log_function
-
 
 def run(config_file: str, env, penalize_inactivity=False, num_generations=None,
         checkpoint=None, num_tests=5, num_cores=1, wandb_project_name=None):
@@ -109,7 +114,7 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None,
     with open("wandb_api_key.txt", "r") as f:
         wandb_key = f.read().strip()
     visualisation_interval = int(num_generations / 10)
-    video_log_function = create_video_log_function(env.spec.id, env.spec.kwargs, visualisation_interval)
+    video_log_function = VideoLogFunction(env.spec.id, env.spec.kwargs, visualisation_interval)
     config_dict = config_to_dict(config_file)
     wandb_reporter = WandbReporter(
         project_name=wandb_project_name,
@@ -148,12 +153,13 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None,
 if __name__ == '__main__':
     env_instance = gymnasium.make(
         'Ant-v5',
+        terminate_when_unhealthy=False,
     )
 
     run(config_file="config-ant",
         env=env_instance,
         penalize_inactivity=False,
-        num_generations=100,
+        num_generations=500,
         num_tests=2,
         num_cores=cpu_count(),
         wandb_project_name="neat-gym"

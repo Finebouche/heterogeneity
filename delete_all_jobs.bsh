@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Get the list of running or queued jobs for the current user and filter job IDs
+job_ids=$(gpulab-cli jobs -U | grep -E 'RUNNING|QUEUED' | awk '{print $1}')
+
+# Check if there are any jobs to cancel
+if [ -z "$job_ids" ]; then
+  echo "No running or queued jobs to cancel."
+  exit 0
+fi
+
+# Loop through each job and cancel it
+for job_id in $job_ids; do
+  echo "Canceling job with ID: $job_id"
+  gpulab-cli cancel "$job_id"
+done
+
+echo "All running and queued jobs have been canceled."

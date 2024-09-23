@@ -47,7 +47,7 @@ def wait_for_job(job_id):
         return True
 
 
-def objective(config, sweep_id=None):
+def objective(config, cpus_per_job=4, sweep_id=None):
     job_name = f"ray_{int(time.time() * 1000)}"
 
     # Construct the command with hyperparameters
@@ -78,6 +78,7 @@ def objective(config, sweep_id=None):
                     "WEIGHT_MUTATE_RATE": f"{config['weight_mutate_rate']}",
                     "ENABLED_MUTATE_RATE": f"{config['enabled_mutate_rate']}",
                     "SWEEP_ID": sweep_id,
+                    "CPUS_PER_JOB": cpus_per_job,
                 },
                 "storage": [
                     {
@@ -88,8 +89,8 @@ def objective(config, sweep_id=None):
             },
             "resources": {
                 "gpus": 0,
-                "cpus": 4,
-                "cpuMemoryGb": 10
+                "cpus": cpus_per_job,
+                "cpuMemoryGb": 5
             },
             "scheduling": {
                 "interactive": False,
@@ -114,8 +115,8 @@ if __name__ == '__main__':
     from itertools import product
 
     search_space = {
-        'conn_add_prob': [0.1, 0.2],
-        'conn_delete_prob': [0.2, 0.3],
+        'conn_add_prob': [0.2],
+        'conn_delete_prob': [0.2],
         'num_hidden': [2, 5, 10, 20],
         'activation_options': [
             'tanh',
@@ -150,5 +151,5 @@ if __name__ == '__main__':
     print(f"Sweep ID: {sweep_id}")
 
     for config in experiments:
-        objective(config, sweep_id)
+        objective(config, cpus_per_job=4, sweep_id=sweep_id)
 

@@ -6,6 +6,8 @@ channels:
 dependencies:
   - python=3.11
   - matplotlib
+  - swig
+  - ffmpeg
   - pip
   - pip:
       - git+https://github.com/Finebouche/neat-python.git # -e ../../other/neat-python
@@ -13,4 +15,5 @@ dependencies:
       - torch
       - torchvision
       - torchaudio
+      - "gymnasium[all]"==1.0.0a2
       - imecilabt-gpulab-cli

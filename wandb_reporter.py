@@ -4,18 +4,22 @@ import numpy as np
 
 
 class WandbReporter(BaseReporter):
-    def __init__(self, project_name, config, tags=None, api_key=None):
+    def __init__(self, project_name, config, tags=None, api_key=None, video_log_function=None):
         super().__init__()
         self.project_name = project_name
         self.config = config
         self.tags = tags
         self.current_generation = None
+        self.video_log_function = video_log_function
 
         # Authenticate with wandb if api_key is provided
         if api_key is not None:
             wandb.login(key=api_key)
         # Initialize wandb run
-        wandb.init(project=self.project_name, config=self.config, tags=self.tags)
+        if self.config is not None:
+            wandb.init(project=self.project_name, config=self.config, tags=self.tags)
+        else:
+            wandb.init(project=self.project_name, tags=self.tags)
 
     def start_generation(self, generation):
         self.current_generation = generation
@@ -44,6 +48,12 @@ class WandbReporter(BaseReporter):
             "network_size/min": min_network_size,
             "network_size/std": std_network_size,
         })
+
+        # Call the video_log_function if provided only every 50 generations
+        if self.video_log_function is not None:
+            numpy_array_video = self.video_log_function(self.current_generation, best_genome, config)
+            if numpy_array_video is not None:
+                wandb.log({"video": wandb.Video(numpy_array_video, fps=15, format="gif")})
 
     def end_generation(self, config, population, species_set):
         pass

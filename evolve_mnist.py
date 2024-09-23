@@ -1,14 +1,14 @@
 import os
 import pickle
-import neat
 import multiprocessing
+from wandb_reporter import WandbReporter
+from config_files_utils import config_to_dict
+
+import neat
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
-from wandb_reporter import WandbReporter
-from config_utils import config_to_dict
-from neat.parallel import ParallelEvaluator
 
 
 # Global variables to be initialized in each process
@@ -81,14 +81,15 @@ def mnist_evaluate_genome(genome, config, dataset='train'):
     fitness = correct / total
     return fitness
 
-
 def run(config_file: str, penalize_inactivity=False, num_generations=None,
         checkpoint=None, num_tests=5, num_cores=1, subset_size=1000,
         wandb_project_name=None):
     # Load the config file
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, "config_files", config_file)
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_file)
+                         config_path)
 
     # Load the population if checkpoint is not None
     if checkpoint is not None:
@@ -120,7 +121,7 @@ def run(config_file: str, penalize_inactivity=False, num_generations=None,
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Use the custom ParallelEvaluator with initializer
-    pe = ParallelEvaluator(
+    pe = neat.parallel.ParallelEvaluator(
         num_workers=num_cores,
         eval_function=mnist_evaluate_genome,
         initializer=mnist_initializer,
@@ -138,8 +139,8 @@ def run(config_file: str, penalize_inactivity=False, num_generations=None,
         pickle.dump(gen_best, f)
 
     # Evaluate the best genome on the test dataset
-    accuracy = mnist_evaluate_genome(gen_best, config, dataset='test')
-    return accuracy
+    score = mnist_evaluate_genome(gen_best, config, dataset='test')
+    return score
 
 
 if __name__ == '__main__':
@@ -150,4 +151,4 @@ if __name__ == '__main__':
         num_cores=multiprocessing.cpu_count(),
         subset_size=1000,
         wandb_project_name="neat-mnist"
-    )
+        )

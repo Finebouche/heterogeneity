@@ -1,5 +1,5 @@
-from evolve import run
-from config_utils import create_temp_config_file
+from evolve_mnist import run
+from config_files_utils import create_temp_config_file
 import os
 import sys
 import wandb
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     def main():
         # Create a temporary config file with these hyperparameters
-        temp_config_file = create_temp_config_file("config-mnist", hyperparams)
+        temp_config_file = create_temp_config_file("config_files/config-mnist", hyperparams)
 
         # Run the NEAT algorithm
         score = run(

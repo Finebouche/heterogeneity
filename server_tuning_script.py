@@ -14,9 +14,9 @@ if __name__ == '__main__':
             'conn_delete_prob': float(os.environ['CONN_DELETE_PROB']),
             'num_hidden': int(os.environ['NUM_HIDDEN']),
             'activation_options': os.environ['ACTIVATION_OPTIONS'],
-            'activation_mutate_rate': int(os.environ['ACTIVATION_MUTATE_RATE']),
-            'weight_mutate_rate': int(os.environ['WEIGHT_MUTATE_RATE']),
-            'enabled_mutate_rate': int(os.environ['ENABLED_MUTATE_RATE']),
+            'activation_mutate_rate': float(os.environ['ACTIVATION_MUTATE_RATE']),
+            'weight_mutate_rate': float(os.environ['WEIGHT_MUTATE_RATE']),
+            'enabled_mutate_rate': float(os.environ['ENABLED_MUTATE_RATE']),
             # Add other hyperparameters as needed
         }
     except KeyError as e:

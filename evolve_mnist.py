@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
 
-
 # Global variables to be initialized in each process
 global_train_loader = None
 global_test_loader = None
@@ -81,8 +80,8 @@ def mnist_evaluate_genome(genome, config, dataset='train'):
     fitness = correct / total
     return fitness
 
-def run(config_file: str, penalize_inactivity=False, num_generations=None,
-        checkpoint=None, num_tests=5, num_cores=1, subset_size=1000,
+
+def run(config_file: str, num_generations=None, checkpoint=None, num_cores=1, subset_size=1000,
         wandb_project_name=None):
     # Load the config file
     local_dir = os.path.dirname(__file__)
@@ -145,9 +144,7 @@ def run(config_file: str, penalize_inactivity=False, num_generations=None,
 
 if __name__ == '__main__':
     run(config_file="config-mnist",
-        penalize_inactivity=False,
         num_generations=300,
-        num_tests=2,
         num_cores=multiprocessing.cpu_count(),
         subset_size=1000,
         wandb_project_name="neat-mnist"

@@ -34,10 +34,8 @@ if __name__ == '__main__':
         # Run the NEAT algorithm
         score = run_mnist(
             config_file=temp_config_file,
-            penalize_inactivity=False,
             num_generations=300,
-            num_tests=2,
-            num_cores=os.environ['CPUS_PER_JOB'],
+            num_cores=int(os.environ['CPUS_PER_JOB']),
             subset_size=1000,
             wandb_project_name="neat-mnist"
         )
@@ -57,7 +55,7 @@ if __name__ == '__main__':
             penalize_inactivity=False,
             num_generations=100,
             num_tests=2,
-            num_cores=os.environ['CPUS_PER_JOB'],
+            num_cores=int(os.environ['CPUS_PER_JOB']),
             wandb_project_name="neat-gym"
         )
 

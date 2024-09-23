@@ -52,7 +52,7 @@ def objective(config, sweep_id=None):
 
     # Construct the command with hyperparameters
     command = (
-        f"/project_ghent/NEAT_HET/neat_het_env/bin/python mnist_evolve/server_tuning_script.py "
+        f"/project_ghent/NEAT_HET/neat_het_env/bin/python server_tuning_script.py "
         # f"{config['conn_add_prob']} "
         # f"{config['conn_delete_prob']} "
         # f"{config['num_hidden']} "

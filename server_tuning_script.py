@@ -37,7 +37,7 @@ if __name__ == '__main__':
             num_tests=2,
             num_cores=1,
             subset_size=1000,
-            wandb_project_name = "neat-mnist"
+            wandb_project_name="neat-mnist"
         )
         wandb.log({"score": score})
 

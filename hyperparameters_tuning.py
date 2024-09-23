@@ -75,6 +75,8 @@ def objective(config, sweep_id=None):
                     "NUM_HIDDEN": str(config['num_hidden']),
                     "ACTIVATION_OPTIONS": f"{config['activation_options']}",
                     "ACTIVATION_MUTATE_RATE": f"{config['activation_mutate_rate']}",
+                    "WEIGHT_MUTATE_RATE": f"{config['weight_mutate_rate']}",
+                    "ENABLED_MUTATE_RATE": f"{config['enabled_mutate_rate']}",
                     "SWEEP_ID": sweep_id,
                 },
                 "storage": [
@@ -113,13 +115,15 @@ if __name__ == '__main__':
 
     search_space = {
         'conn_add_prob': [0.1, 0.2],
-        'conn_delete_prob': [0.1],
-        'num_hidden': [2, 4],
+        'conn_delete_prob': [0.2, 0.3],
+        'num_hidden': [2, 5, 10, 20],
         'activation_options': [
             'tanh',
             "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
         ],
-        'activation_mutate_rate': [0.1, 0.2]
+        'activation_mutate_rate': [0.1, 0.2],
+        'weight_mutate_rate': [0.5, 0.8],
+        'enabled_mutate_rate': [0.01, 0.1, 0.5]
     }
 
     # Generate all combinations of hyperparameters
@@ -136,6 +140,8 @@ if __name__ == '__main__':
             "num_hidden": {"values": search_space['num_hidden']},
             "activation_options": {"values": search_space['activation_options']},
             "activation_mutate_rate": {"values": search_space['activation_mutate_rate']},
+            "weight_mutate_rate": {"values": search_space['weight_mutate_rate']},
+            "enabled_mutate_rate": {"values": search_space['enabled_mutate_rate']},
         },
     }
 

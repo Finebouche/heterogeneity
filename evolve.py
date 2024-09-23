@@ -8,6 +8,8 @@ import torch
 import torch.nn as nn
 from wandb_reporter import WandbReporter
 from config_utils import config_to_dict
+from neat.parallel import ParallelEvaluator
+
 
 # Global variables to be initialized in each process
 global_train_loader = None
@@ -15,7 +17,7 @@ global_test_loader = None
 global_device = None
 
 
-def initializer(device, subset_size):
+def mnist_initializer(device, subset_size):
     global global_train_loader
     global global_test_loader
     global global_device
@@ -35,7 +37,7 @@ def initializer(device, subset_size):
     global_test_loader = DataLoader(test_data, batch_size=64, shuffle=False)
 
 
-def evaluate_genome(genome, config, dataset='train'):
+def mnist_evaluate_genome(genome, config, dataset='train'):
     global global_train_loader
     global global_test_loader
     global global_device
@@ -80,22 +82,6 @@ def evaluate_genome(genome, config, dataset='train'):
     return fitness
 
 
-# Custom ParallelEvaluator with initializer
-class MyParallelEvaluator(object):
-    def __init__(self, num_workers, eval_function, timeout=None, initializer=None, initargs=()):
-        self.eval_function = eval_function
-        self.timeout = timeout
-        self.pool = multiprocessing.Pool(processes=num_workers, initializer=initializer, initargs=initargs)
-
-    def evaluate(self, genomes, config):
-        jobs = []
-        for genome_id, genome in genomes:
-            jobs.append(self.pool.apply_async(self.eval_function, (genome, config)))
-
-        for job, (genome_id, genome) in zip(jobs, genomes):
-            genome.fitness = job.get(timeout=self.timeout)
-
-
 def run(config_file: str, penalize_inactivity=False, num_generations=None,
         checkpoint=None, num_tests=5, num_cores=1, subset_size=1000,
         wandb_project_name=None):
@@ -134,10 +120,10 @@ def run(config_file: str, penalize_inactivity=False, num_generations=None,
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Use the custom ParallelEvaluator with initializer
-    pe = MyParallelEvaluator(
+    pe = ParallelEvaluator(
         num_workers=num_cores,
-        eval_function=evaluate_genome,
-        initializer=initializer,
+        eval_function=mnist_evaluate_genome,
+        initializer=mnist_initializer,
         initargs=(device, subset_size)
     )
 
@@ -152,7 +138,7 @@ def run(config_file: str, penalize_inactivity=False, num_generations=None,
         pickle.dump(gen_best, f)
 
     # Evaluate the best genome on the test dataset
-    accuracy = evaluate_genome(gen_best, config, dataset='test')
+    accuracy = mnist_evaluate_genome(gen_best, config, dataset='test')
     return accuracy
 
 

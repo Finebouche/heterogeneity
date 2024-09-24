@@ -52,8 +52,9 @@ if __name__ == '__main__':
         # Run the NEAT algorithm
         run_gym(
             config_file=temp_config_file,
+            env=env_instance,
             penalize_inactivity=False,
-            num_generations=100,
+            num_generations=10,
             num_tests=2,
             num_cores=int(os.environ['CPUS_PER_JOB']),
             wandb_project_name="neat-gym"
@@ -64,4 +65,4 @@ if __name__ == '__main__':
         wandb_key = f.read().strip()
     wandb.login(key=wandb_key)
 
-    wandb.agent(os.environ['SWEEP_ID'], function=main_mnist, project="neat-mnist", entity="tcazalet_airo")
+    wandb.agent(os.environ['SWEEP_ID'], function=main_mnist, project="neat-mnist", entity="tcazalet_airo", count=1)

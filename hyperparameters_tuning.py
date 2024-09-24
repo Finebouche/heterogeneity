@@ -3,6 +3,7 @@ import json
 import time
 import tempfile
 import wandb
+from itertools import product
 
 
 def submit_job(job_definition):
@@ -53,10 +54,6 @@ def objective(config, cpus_per_job=4, sweep_id=None):
     # Construct the command with hyperparameters
     command = (
         f"/project_ghent/NEAT_HET/neat_het_env/bin/python server_tuning_script.py "
-        # f"{config['conn_add_prob']} "
-        # f"{config['conn_delete_prob']} "
-        # f"{config['num_hidden']} "
-        # f"{config['activation_options']} "
     )
     # Build the job definition
     job_definition = {
@@ -112,7 +109,6 @@ def objective(config, cpus_per_job=4, sweep_id=None):
 
 
 if __name__ == '__main__':
-    from itertools import product
 
     search_space = {
         'conn_add_prob': [0.2],
@@ -127,14 +123,11 @@ if __name__ == '__main__':
         'enabled_mutate_rate': [0.01, 0.1, 0.5]
     }
 
-    # Generate all combinations of hyperparameters
-    keys, values = zip(*search_space.items())
-    experiments = [dict(zip(keys, v)) for v in product(*values)]
-
-    # Optional: Initialize a sweep configuration in wandb
+    # Initialize the sweep
     sweep_configuration = {
         "name": "sweep-mnist",
         "method": "grid",
+        "metric": {"goal": "maximise", "name": "score"},
         "parameters": {
             "conn_add_prob": {"values": search_space['conn_add_prob']},
             "conn_delete_prob": {"values": search_space['conn_delete_prob']},
@@ -145,11 +138,12 @@ if __name__ == '__main__':
             "enabled_mutate_rate": {"values": search_space['enabled_mutate_rate']},
         },
     }
-
-    # Initialize the sweep
     sweep_id = wandb.sweep(sweep=sweep_configuration, project="neat-mnist", entity="tcazalet_airo")
     print(f"Sweep ID: {sweep_id}")
 
+    # Generate all combinations of hyperparameters
+    keys, values = zip(*search_space.items())
+    experiments = [dict(zip(keys, v)) for v in product(*values)]
     for config in experiments:
-        objective(config, cpus_per_job=4, sweep_id=sweep_id)
+        objective(config, cpus_per_job=6, sweep_id=sweep_id)
 

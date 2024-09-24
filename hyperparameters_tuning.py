@@ -76,6 +76,7 @@ def objective(config, cpus_per_job=4, sweep_id=None):
                     "ENABLED_MUTATE_RATE": f"{config['enabled_mutate_rate']}",
                     "SWEEP_ID": sweep_id,
                     "CPUS_PER_JOB": cpus_per_job,
+                    "NUM_GENERATIONS": 300,
                 },
                 "storage": [
                     {

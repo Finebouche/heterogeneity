@@ -31,6 +31,7 @@ if __name__ == '__main__':
         print("Running MNIST")
         print("Hyperparameters:", hyperparams)
         print("CPUS_PER_JOB:", os.environ['CPUS_PER_JOB'])
+        print("NUM_GENERATIONS:", os.environ['NUM_GENERATIONS'])
 
         # Create a temporary config file with these hyperparameters
         temp_config_file = create_temp_config_file("config_files/config-mnist", hyperparams)
@@ -38,7 +39,7 @@ if __name__ == '__main__':
         # Run the NEAT algorithm
         score = run_mnist(
             config_file=temp_config_file,
-            num_generations=10,
+            num_generations=int(os.environ['NUM_GENERATIONS']),
             num_cores=int(os.environ['CPUS_PER_JOB']),
             subset_size=1000,
             wandb_project_name="neat-mnist",
@@ -59,7 +60,7 @@ if __name__ == '__main__':
             config_file=temp_config_file,
             env=env_instance,
             penalize_inactivity=False,
-            num_generations=10,
+            num_generations=int(os.environ['NUM_GENERATIONS']),
             num_tests=2,
             num_cores=int(os.environ['CPUS_PER_JOB']),
             wandb_project_name="neat-gym",

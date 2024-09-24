@@ -45,7 +45,8 @@ if __name__ == '__main__':
             wandb_project_name="neat-mnist",
             show_species_detail=False
         )
-        wandb.log({"score": score})
+        print("Val score:", score)
+        wandb.log({"val_score": score})
 
 
     def main_gym():

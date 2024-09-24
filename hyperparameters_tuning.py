@@ -128,7 +128,7 @@ if __name__ == '__main__':
     sweep_configuration = {
         "name": "sweep-mnist",
         "method": "grid",
-        "metric": {"goal": "maximise", "name": "score"},
+        "metric": {"goal": "maximise", "name": "val_score"},
         "parameters": {
             "conn_add_prob": {"values": search_space['conn_add_prob']},
             "conn_delete_prob": {"values": search_space['conn_delete_prob']},

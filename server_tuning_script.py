@@ -38,7 +38,7 @@ if __name__ == '__main__':
         # Run the NEAT algorithm
         score = run_mnist(
             config_file=temp_config_file,
-            num_generations=300,
+            num_generations=10,
             num_cores=int(os.environ['CPUS_PER_JOB']),
             subset_size=1000,
             wandb_project_name="neat-mnist",

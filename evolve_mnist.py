@@ -144,7 +144,7 @@ def run(config_file: str, num_generations=None, checkpoint=None, num_cores=1, su
 
 if __name__ == '__main__':
     run(config_file="config-mnist",
-        num_generations=300,
+        num_generations=10,
         num_cores=multiprocessing.cpu_count(),
         subset_size=1000,
         wandb_project_name="neat-mnist"

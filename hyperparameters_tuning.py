@@ -48,7 +48,7 @@ def wait_for_job(job_id):
         return True
 
 
-def objective(config, cpus_per_job=4, sweep_id=None):
+def objective(config, cpus_per_job=4, num_generations=100, sweep_id=None):
     job_name = f"ray_{int(time.time() * 1000)}"
 
     # Construct the command with hyperparameters
@@ -76,7 +76,7 @@ def objective(config, cpus_per_job=4, sweep_id=None):
                     "ENABLED_MUTATE_RATE": f"{config['enabled_mutate_rate']}",
                     "SWEEP_ID": sweep_id,
                     "CPUS_PER_JOB": cpus_per_job,
-                    "NUM_GENERATIONS": 300,
+                    "NUM_GENERATIONS": num_generations,
                 },
                 "storage": [
                     {
@@ -146,5 +146,5 @@ if __name__ == '__main__':
     keys, values = zip(*search_space.items())
     experiments = [dict(zip(keys, v)) for v in product(*values)]
     for config in experiments:
-        objective(config, cpus_per_job=6, sweep_id=sweep_id)
+        objective(config, cpus_per_job=6, num_generations=300, sweep_id=sweep_id)
 

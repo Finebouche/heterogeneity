@@ -98,7 +98,7 @@ class VideoLogFunction:
             return None
 
 def run(config_file: str, env, penalize_inactivity=False, num_generations=None,
-        checkpoint=None, num_tests=5, num_cores=1, wandb_project_name=None):
+        checkpoint=None, num_tests=5, num_cores=1, wandb_project_name=None, show_species_detail=True):
     print("Charging environment:", env.spec.id)
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "config_files", config_file)
@@ -124,7 +124,7 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None,
         video_log_function=video_log_function
     )
     pop.add_reporter(wandb_reporter)
-    pop.add_reporter(neat.StdOutReporter(True))
+    pop.add_reporter(neat.StdOutReporter(show_species_detail))
     pop.add_reporter(neat.Checkpointer(
         generation_interval=int(num_generations / 10),
         time_interval_seconds=1800,

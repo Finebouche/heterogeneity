@@ -82,7 +82,7 @@ def mnist_evaluate_genome(genome, config, dataset='train'):
 
 
 def run(config_file: str, num_generations=None, checkpoint=None, num_cores=1, subset_size=1000,
-        wandb_project_name=None):
+        wandb_project_name=None, show_species_detail=True):
     # Load the config file
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "config_files", config_file)
@@ -110,7 +110,7 @@ def run(config_file: str, num_generations=None, checkpoint=None, num_cores=1, su
         )
         pop.add_reporter(wandb_reporter)
 
-    pop.add_reporter(neat.StdOutReporter(True))
+    pop.add_reporter(neat.StdOutReporter(show_species_detail))
     # pop.add_reporter(neat.Checkpointer(
     #     generation_interval=int(num_generations / 10),
     #     time_interval_seconds=1800,

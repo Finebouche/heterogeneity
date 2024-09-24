@@ -28,6 +28,10 @@ if __name__ == '__main__':
 
 
     def main_mnist():
+        print("Running MNIST")
+        print("Hyperparameters:", hyperparams)
+        print("CPUS_PER_JOB:", os.environ['CPUS_PER_JOB'])
+
         # Create a temporary config file with these hyperparameters
         temp_config_file = create_temp_config_file("config_files/config-mnist", hyperparams)
 
@@ -37,7 +41,8 @@ if __name__ == '__main__':
             num_generations=300,
             num_cores=int(os.environ['CPUS_PER_JOB']),
             subset_size=1000,
-            wandb_project_name="neat-mnist"
+            wandb_project_name="neat-mnist",
+            show_species_detail=False
         )
         wandb.log({"score": score})
 
@@ -57,7 +62,8 @@ if __name__ == '__main__':
             num_generations=10,
             num_tests=2,
             num_cores=int(os.environ['CPUS_PER_JOB']),
-            wandb_project_name="neat-gym"
+            wandb_project_name="neat-gym",
+            show_species_detail=False
         )
 
 

@@ -67,13 +67,6 @@ def objective(config, cpus_per_job=4, num_generations=100, sweep_id=None):
                 "command": f"sh -c \"cd /project_ghent/NEAT_HET/neat-heterogeneous && "
                            f"{command}\"",
                 "environment": {
-                    "CONN_ADD_PROB": str(config['conn_add_prob']),
-                    "CONN_DELETE_PROB": str(config['conn_delete_prob']),
-                    "NUM_HIDDEN": str(config['num_hidden']),
-                    "ACTIVATION_OPTIONS": f"{config['activation_options']}",
-                    "ACTIVATION_MUTATE_RATE": f"{config['activation_mutate_rate']}",
-                    "WEIGHT_MUTATE_RATE": f"{config['weight_mutate_rate']}",
-                    "ENABLED_MUTATE_RATE": f"{config['enabled_mutate_rate']}",
                     "SWEEP_ID": sweep_id,
                     "CPUS_PER_JOB": cpus_per_job,
                     "NUM_GENERATIONS": num_generations,
@@ -114,7 +107,7 @@ if __name__ == '__main__':
     search_space = {
         'conn_add_prob': [0.2],
         'conn_delete_prob': [0.2],
-        'num_hidden': [2, 5, 10, 20],
+        'num_hidden': [20],
         'activation_options': [
             'tanh',
             "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
@@ -128,7 +121,7 @@ if __name__ == '__main__':
     sweep_configuration = {
         "name": "sweep-mnist",
         "method": "grid",
-        "metric": {"goal": "maximise", "name": "val_score"},
+        "metric": {"goal": "maximize", "name": "val_score"},
         "parameters": {
             "conn_add_prob": {"values": search_space['conn_add_prob']},
             "conn_delete_prob": {"values": search_space['conn_delete_prob']},
@@ -139,7 +132,12 @@ if __name__ == '__main__':
             "enabled_mutate_rate": {"values": search_space['enabled_mutate_rate']},
         },
     }
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project="neat-mnist", entity="tcazalet_airo")
+
+    sweep_id = None
+    if sweep_id is None:
+        # Create a new sweep
+        print("Creating new sweep...")
+        sweep_id = wandb.sweep(sweep=sweep_configuration, project="neat-mnist", entity="tcazalet_airo")
     print(f"Sweep ID: {sweep_id}")
 
     # Generate all combinations of hyperparameters

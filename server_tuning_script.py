@@ -60,6 +60,11 @@ if __name__ == '__main__':
             record_video=True
         )
 
+        env_instance.close()
+
+        print("Val score:", score)
+        wandb.log({"val_score": score})
+
 
     with open("wandb_api_key.txt", "r") as f:
         wandb_key = f.read().strip()

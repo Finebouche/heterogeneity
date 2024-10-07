@@ -150,7 +150,10 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None, 
     with open(os.path.join(result_path, 'best_genome.pickle'), 'wb') as f:
         pickle.dump(gen_best, f)
 
-    env.close()
+    score = gym_evaluate_genome(gen_best, config)
+
+    return score
+
 
 
 if __name__ == '__main__':
@@ -168,3 +171,5 @@ if __name__ == '__main__':
         wandb_project_name="neat-gym",
         record_video=True
         )
+
+    env_instance.close()

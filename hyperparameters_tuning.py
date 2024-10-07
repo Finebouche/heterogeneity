@@ -63,7 +63,7 @@ def objective(cpus_per_job=4, num_generations=100, sweep_id=None, project=None):
         },
         "request": {
             "docker": {
-                "image": "jupyter/tensorflow-notebook",
+                "image": "tcazalet:PrBwbmivszbQgHnGNCqt@gitlab.ilabt.imec.be:4567/tcazalet/docker_container:mujoco",
                 "command": f"sh -c \"cd /project_ghent/NEAT_HET/neat-heterogeneous && "
                            f"{command}\"",
                 "environment": {
@@ -125,7 +125,7 @@ if __name__ == '__main__':
                 'weight_mutate_rate': {"min": 0.1, "max": 0.9},
                 'bias_mutate_rate': {"min": 0.1, "max": 0.9},
                 'enabled_mutate_rate': {"min": 0.1, "max": 0.9},
-                'species_elitism': {'min': 2.0, 'max': 10.0},
+                'species_elitism': {'min': 1, 'max': 5},
             },
         }
 
@@ -141,6 +141,6 @@ if __name__ == '__main__':
         # experiments = [dict(zip(keys, v)) for v in product(*values)]
         # for config in experiments:`
         # start 10 jobs
-        for _ in range(1):
+        for _ in range(50):
             objective(cpus_per_job=6, num_generations=500, sweep_id=sweep_id, project=f"neat-{problem}")
 

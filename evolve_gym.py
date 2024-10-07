@@ -62,7 +62,6 @@ def gym_evaluate_genome(genome, config):
     return total_reward / global_num_episodes
 
 
-
 class VideoLogFunction:
     def __init__(self, env_spec_id, env_kwargs, visualisation_interval=50):
         self.env_spec_id = env_spec_id
@@ -97,8 +96,9 @@ class VideoLogFunction:
         else:
             return None
 
-def run(config_file: str, env, penalize_inactivity=False, num_generations=None,
-        checkpoint=None, num_tests=5, num_cores=1, wandb_project_name=None, show_species_detail=True):
+
+def run(config_file: str, env, penalize_inactivity=False, num_generations=None, checkpoint=None,
+        num_tests=5, num_cores=1, wandb_project_name=None, show_species_detail=True, record_video=False):
     print("Charging environment:", env.spec.id)
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "config_files", config_file)
@@ -114,7 +114,10 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None,
     with open("wandb_api_key.txt", "r") as f:
         wandb_key = f.read().strip()
     visualisation_interval = int(num_generations / 10)
-    video_log_function = VideoLogFunction(env.spec.id, env.spec.kwargs, visualisation_interval)
+    if record_video:
+        video_log_function = VideoLogFunction(env.spec.id, env.spec.kwargs, visualisation_interval)
+    else:
+        video_log_function = None
     config_dict = config_to_dict(config_file)
     wandb_reporter = WandbReporter(
         project_name=wandb_project_name,
@@ -162,5 +165,6 @@ if __name__ == '__main__':
         num_generations=500,
         num_tests=2,
         num_cores=cpu_count(),
-        wandb_project_name="neat-gym"
+        wandb_project_name="neat-gym",
+        record_video=False
         )

@@ -38,14 +38,14 @@ if __name__ == '__main__':
         wandb.init(project="neat-gym")
 
         # Create a temporary config file with these hyperparameters
-        temp_config_file = create_temp_config_file("config_files/config-ant", hyperparams)
+        temp_config_file = create_temp_config_file("config_files/config-ant", wandb.config)
 
         print("Running ANT")
         print("Hyperparameters:", wandb.config)
 
         env_instance = gymnasium.make(
             'Ant-v5',
-            terminate_when_unhealthy=False,
+            terminate_when_unhealthy=True,
         )
         # Run the NEAT algorithm
         run_gym(
@@ -56,7 +56,8 @@ if __name__ == '__main__':
             num_tests=2,
             num_cores=int(os.environ['CPUS_PER_JOB']),
             wandb_project_name=project,
-            show_species_detail=False
+            show_species_detail=False,
+            record_video=True
         )
 
 

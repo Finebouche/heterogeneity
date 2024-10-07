@@ -141,6 +141,6 @@ if __name__ == '__main__':
         # experiments = [dict(zip(keys, v)) for v in product(*values)]
         # for config in experiments:`
         # start 10 jobs
-        for _ in range(50):
+        for _ in range(1):
             objective(cpus_per_job=6, num_generations=500, sweep_id=sweep_id, project=f"neat-{problem}")
 

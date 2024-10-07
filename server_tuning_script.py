@@ -7,6 +7,10 @@ import wandb
 import gymnasium
 
 if __name__ == '__main__':
+    print("CPUS_PER_JOB:", os.environ['CPUS_PER_JOB'])
+    print("NUM_GENERATIONS:", os.environ['NUM_GENERATIONS'])
+    project = os.environ['WANDB_PROJECT']
+
     def main_mnist():
         wandb.init(project="neat-mnist")
 
@@ -15,8 +19,6 @@ if __name__ == '__main__':
 
         print("Running MNIST")
         print("Hyperparameters:", wandb.config)
-        print("CPUS_PER_JOB:", os.environ['CPUS_PER_JOB'])
-        print("NUM_GENERATIONS:", os.environ['NUM_GENERATIONS'])
 
         # Run the NEAT algorithm
         score = run_mnist(
@@ -24,7 +26,7 @@ if __name__ == '__main__':
             num_generations=int(os.environ['NUM_GENERATIONS']),
             num_cores=int(os.environ['CPUS_PER_JOB']),
             subset_size=1000,
-            wandb_project_name="neat-mnist",
+            wandb_project_name=project,
             show_species_detail=False
         )
 
@@ -37,6 +39,10 @@ if __name__ == '__main__':
 
         # Create a temporary config file with these hyperparameters
         temp_config_file = create_temp_config_file("config_files/config-ant", hyperparams)
+
+        print("Running ANT")
+        print("Hyperparameters:", wandb.config)
+
         env_instance = gymnasium.make(
             'Ant-v5',
             terminate_when_unhealthy=False,
@@ -49,7 +55,7 @@ if __name__ == '__main__':
             num_generations=int(os.environ['NUM_GENERATIONS']),
             num_tests=2,
             num_cores=int(os.environ['CPUS_PER_JOB']),
-            wandb_project_name="neat-gym",
+            wandb_project_name=project,
             show_species_detail=False
         )
 
@@ -58,4 +64,9 @@ if __name__ == '__main__':
         wandb_key = f.read().strip()
     wandb.login(key=wandb_key)
 
-    wandb.agent(os.environ['SWEEP_ID'], function=main_mnist, project="neat-mnist", entity="tcazalet_airo", count=1)
+    if project == "neat-mnist":
+        wandb.agent(os.environ['SWEEP_ID'], function=main_mnist, project=project, entity="tcazalet_airo", count=1)
+    elif project == "neat-gym":
+        wandb.agent(os.environ['SWEEP_ID'], function=main_gym, project=project, entity="tcazalet_airo", count=1)
+    else:
+        raise ValueError("Unknown project")

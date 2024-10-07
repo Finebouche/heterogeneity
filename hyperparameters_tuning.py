@@ -48,10 +48,10 @@ def wait_for_job(job_id):
         return True
 
 
-def objective(config, cpus_per_job=4, num_generations=100, sweep_id=None):
-    job_name = f"ray_{int(time.time() * 1000)}"
+def objective(cpus_per_job=4, num_generations=100, sweep_id=None, project=None):
+    job_name = f"wandb_{int(time.time() * 1000)}"
 
-    # Construct the command with hyperparameters
+    # The file to call
     command = (
         f"/project_ghent/NEAT_HET/neat_het_env/bin/python server_tuning_script.py "
     )
@@ -68,6 +68,7 @@ def objective(config, cpus_per_job=4, num_generations=100, sweep_id=None):
                            f"{command}\"",
                 "environment": {
                     "SWEEP_ID": sweep_id,
+                    "WANDB_PROJECT": project,
                     "CPUS_PER_JOB": cpus_per_job,
                     "NUM_GENERATIONS": num_generations,
                 },
@@ -103,46 +104,43 @@ def objective(config, cpus_per_job=4, num_generations=100, sweep_id=None):
 
 
 if __name__ == '__main__':
-
-    search_space = {
-        'conn_add_prob': [0.2],
-        'conn_delete_prob': [0.2],
-        'num_hidden': [20],
-        'activation_options': [
-            'tanh',
-            "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
-        ],
-        'activation_mutate_rate': [0.1, 0.2],
-        'weight_mutate_rate': [0.5, 0.8],
-        'enabled_mutate_rate': [0.01, 0.1, 0.5]
-    }
+    problem = "gym"  # mnist or gym
+    project = f"neat-{problem}"
 
     # Initialize the sweep
-    sweep_configuration = {
-        "name": "sweep-mnist",
-        "method": "grid",
-        "metric": {"goal": "maximize", "name": "val_score"},
-        "parameters": {
-            "conn_add_prob": {"values": search_space['conn_add_prob']},
-            "conn_delete_prob": {"values": search_space['conn_delete_prob']},
-            "num_hidden": {"values": search_space['num_hidden']},
-            "activation_options": {"values": search_space['activation_options']},
-            "activation_mutate_rate": {"values": search_space['activation_mutate_rate']},
-            "weight_mutate_rate": {"values": search_space['weight_mutate_rate']},
-            "enabled_mutate_rate": {"values": search_space['enabled_mutate_rate']},
-        },
-    }
+    for num_hidden in [5]:
+        sweep_configuration = {
+            "name": f"sweep-mnist-{num_hidden}",
+            "method": "bayes",
+            "metric": {"goal": "maximize", "name": "val_score"},
+            "parameters": {
+                'conn_add_prob': {"min": 0.1, "max": 0.9},
+                'conn_delete_prob': {"min": 0.1, "max": 0.9},
+                'activation_options': {"values":  [
+                    'tanh',
+                    "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
+                ]},
+                'num_hidden': {'values': [num_hidden]},
+                'activation_mutate_rate': {"min": 0.1, "max": 0.9},
+                'weight_mutate_rate': {"min": 0.1, "max": 0.9},
+                'bias_mutate_rate': {"min": 0.1, "max": 0.9},
+                'enabled_mutate_rate': {"min": 0.1, "max": 0.9},
+                'species_elitism': {'min': 2.0, 'max': 10.0},
+            },
+        }
 
-    sweep_id = None
-    if sweep_id is None:
-        # Create a new sweep
-        print("Creating new sweep...")
-        sweep_id = wandb.sweep(sweep=sweep_configuration, project="neat-mnist", entity="tcazalet_airo")
-    print(f"Sweep ID: {sweep_id}")
+        sweep_id = None
+        if sweep_id is None:
+            # Create a new sweep
+            print("Creating new sweep...")
+            sweep_id = wandb.sweep(sweep=sweep_configuration, project=project, entity="tcazalet_airo")
+        print(f"Sweep ID: {sweep_id}")
 
-    # Generate all combinations of hyperparameters
-    keys, values = zip(*search_space.items())
-    experiments = [dict(zip(keys, v)) for v in product(*values)]
-    for config in experiments:
-        objective(config, cpus_per_job=6, num_generations=300, sweep_id=sweep_id)
+        # Generate all combinations of hyperparameters
+        # keys, values = zip(*search_space.items())
+        # experiments = [dict(zip(keys, v)) for v in product(*values)]
+        # for config in experiments:`
+        # start 10 jobs
+        for _ in range(50):
+            objective(cpus_per_job=6, num_generations=500, sweep_id=sweep_id, project=f"neat-{problem}")
 

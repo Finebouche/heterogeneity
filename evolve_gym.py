@@ -156,7 +156,7 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None, 
 if __name__ == '__main__':
     env_instance = gymnasium.make(
         'Ant-v5',
-        terminate_when_unhealthy=False,
+        terminate_when_unhealthy=True,
     )
 
     run(config_file="config-ant",
@@ -166,5 +166,5 @@ if __name__ == '__main__':
         num_tests=2,
         num_cores=cpu_count(),
         wandb_project_name="neat-gym",
-        record_video=False
+        record_video=True
         )

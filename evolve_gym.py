@@ -113,12 +113,11 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None, 
 
     with open("wandb_api_key.txt", "r") as f:
         wandb_key = f.read().strip()
-    visualisation_interval = int(num_generations / 10)
+    config_dict = config_to_dict(config_file)
     if record_video:
-        video_log_function = VideoLogFunction(env.spec.id, env.spec.kwargs, visualisation_interval)
+        video_log_function = VideoLogFunction(env.spec.id, env.spec.kwargs, visualisation_interval=int(num_generations / 10))
     else:
         video_log_function = None
-    config_dict = config_to_dict(config_file)
     wandb_reporter = WandbReporter(
         project_name=wandb_project_name,
         config=config_dict,

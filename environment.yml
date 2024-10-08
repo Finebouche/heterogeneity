@@ -15,5 +15,5 @@ dependencies:
       - torch
       - torchvision
       - torchaudio
-      - "gymnasium[all]"==1.0.0a2
+      - "gymnasium[all]"==1.0.0
       - imecilabt-gpulab-cli

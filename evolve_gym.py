@@ -128,11 +128,11 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None, 
     )
     pop.add_reporter(wandb_reporter)
     pop.add_reporter(neat.StdOutReporter(show_species_detail))
-    pop.add_reporter(neat.Checkpointer(
-        generation_interval=int(num_generations / 10),
-        time_interval_seconds=1800,
-        filename_prefix="checkpoint-" + env.spec.id + "-"
-    ))
+    # pop.add_reporter(neat.Checkpointer(
+    #     generation_interval=int(num_generations / 10),
+    #     time_interval_seconds=1800,
+    #     filename_prefix="checkpoint-" + env.spec.id + "-"
+    # ))
 
     pe = neat.parallel.ParallelEvaluator(
         num_workers=num_cores,

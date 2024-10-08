@@ -1,11 +1,11 @@
 # neat-python configuration for the Walker environment on Gymnasium
 
 [NEAT]
-pop_size              = 200
+pop_size              = 500
 # Note: the fitness threshold will never be reached because
 # we are controlling the termination ourselves based on simulation performance.
 fitness_criterion     = max
-fitness_threshold     = 1000
+fitness_threshold     = 200
 reset_on_extinction   = 1
 
 [DefaultGenome]
@@ -42,8 +42,8 @@ bias_init_stdev         = 1.0
 bias_replace_rate       = 0.02
 bias_mutate_rate        = 0.8
 bias_mutate_power       = 0.4
-bias_max_value          = 10.0
-bias_min_value          = -10.0
+bias_max_value          = 5.0
+bias_min_value          = -5.0
 
 response_init_mean      = 1.0
 response_init_stdev     = 0.0
@@ -53,8 +53,8 @@ response_mutate_power   = 0.0
 response_max_value      = 20.0
 response_min_value      = -20.0
 
-weight_max_value        = 10
-weight_min_value        = -10
+weight_max_value        = 5
+weight_min_value        = -5
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
 weight_mutate_rate      = 0.8
@@ -72,5 +72,5 @@ max_stagnation  = 50
 species_elitism = 5
 
 [DefaultReproduction]
-elitism            = 2
+elitism            = 3
 survival_threshold = 0.2

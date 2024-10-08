@@ -48,6 +48,7 @@ if __name__ == '__main__':
         env_instance = gymnasium.make(
             'Ant-v5',
             terminate_when_unhealthy=True,
+            healthy_reward=0.0,
         )
         # Run the NEAT algorithm
         score = run_gym(

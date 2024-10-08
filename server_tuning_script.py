@@ -10,6 +10,8 @@ if __name__ == '__main__':
     print("CPUS_PER_JOB:", os.environ['CPUS_PER_JOB'])
     print("NUM_GENERATIONS:", os.environ['NUM_GENERATIONS'])
     project = os.environ['WANDB_PROJECT']
+    # If you don't want your script to sync to the cloud
+    os.environ["WANDB_CONSOLE"] = "off"
 
     def main_mnist():
         wandb.init(project="neat-mnist")

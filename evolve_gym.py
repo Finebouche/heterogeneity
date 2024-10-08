@@ -150,6 +150,7 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None, 
     with open(os.path.join(result_path, 'best_genome.pickle'), 'wb') as f:
         pickle.dump(gen_best, f)
 
+    gym_initializer(env.spec.id, env.spec.kwargs, penalize_inactivity, num_tests)
     score = gym_evaluate_genome(gen_best, config)
 
     return score

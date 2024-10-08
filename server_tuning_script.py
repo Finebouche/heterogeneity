@@ -16,9 +16,9 @@ if __name__ == '__main__':
 
         # Create a temporary config file with these hyperparameters
         temp_config_file = create_temp_config_file("config_files/config-mnist", wandb.config)
-
-        print("Running MNIST")
-        print("Hyperparameters:", wandb.config)
+        # print file
+        with open(temp_config_file, 'r') as f:
+            print(f.read())
 
         # Run the NEAT algorithm
         score = run_mnist(
@@ -39,9 +39,9 @@ if __name__ == '__main__':
 
         # Create a temporary config file with these hyperparameters
         temp_config_file = create_temp_config_file("config_files/config-ant", wandb.config)
-
-        print("Running ANT")
-        print("Hyperparameters:", wandb.config)
+        # print file
+        with open(temp_config_file, 'r') as f:
+            print(f.read())
 
         env_instance = gymnasium.make(
             'Ant-v5',
@@ -60,11 +60,10 @@ if __name__ == '__main__':
             record_video=True
         )
 
-        env_instance.close()
-
         print("Val score:", score)
         wandb.log({"val_score": score})
 
+        env_instance.close()
 
     with open("wandb_api_key.txt", "r") as f:
         wandb_key = f.read().strip()

@@ -48,7 +48,7 @@ if __name__ == '__main__':
             terminate_when_unhealthy=True,
         )
         # Run the NEAT algorithm
-        run_gym(
+        score = run_gym(
             config_file=temp_config_file,
             env=env_instance,
             penalize_inactivity=False,

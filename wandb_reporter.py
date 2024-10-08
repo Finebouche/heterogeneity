@@ -65,7 +65,10 @@ class WandbReporter(BaseReporter):
         pass
 
     def found_solution(self, config, generation, best):
-        pass
+        if self.video_log_function is not None:
+            numpy_array_video = self.video_log_function(self.current_generation, best, config)
+            if numpy_array_video is not None:
+                wandb.log({"video": wandb.Video(numpy_array_video, fps=15, format="gif")})
 
     def species_stagnant(self, sid, species):
         pass

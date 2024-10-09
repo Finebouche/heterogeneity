@@ -160,6 +160,7 @@ if __name__ == '__main__':
     env_instance = gymnasium.make(
         'Ant-v5',
         terminate_when_unhealthy=True,
+        healthy_z_range=(0.2, 2.0),
     )
 
     run(config_file="config-ant",

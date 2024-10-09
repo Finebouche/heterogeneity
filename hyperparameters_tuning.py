@@ -120,6 +120,7 @@ if __name__ == '__main__':
                     'tanh',
                     "sigmoid tanh sin gauss relu softplus identity clamped abs hat"
                 ]},
+                "initial_connection": {"values": ["partial_direct 0.1", "partial_direct 0.25", "partial_direct 0.5"]},
                 'num_hidden': {'values': [num_hidden]},
                 'activation_mutate_rate': {"min": 0.1, "max": 0.9},
                 'weight_mutate_rate': {"min": 0.1, "max": 0.9},

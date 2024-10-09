@@ -49,6 +49,7 @@ if __name__ == '__main__':
             'Ant-v5',
             terminate_when_unhealthy=True,
             healthy_reward=0.0,
+            healthy_z_range=(0.2, 2.0),
         )
         # Run the NEAT algorithm
         score = run_gym(

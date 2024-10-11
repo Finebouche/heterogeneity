@@ -8,53 +8,93 @@ import neat
 import gymnasium
 from config_files_utils import config_to_dict
 
+import torch
+from encoding.vae import VAE  # Replace 'vae_model' with the actual module name
+
+device = 'cpu'
+
 # Global variables to be initialized in each process
 global_env = None
-global_penalize_inactivity = None
 global_num_episodes = None
+global_vae = None
 
-
-def gym_initializer(env_spec_id, env_kwargs, penalize_inactivity, num_episodes):
+def gym_initializer(env_spec_id, env_kwargs, num_episodes):
     global global_env
-    global global_penalize_inactivity
     global global_num_episodes
 
     global_env = gymnasium.make(env_spec_id, **env_kwargs)
-    global_penalize_inactivity = penalize_inactivity
     global_num_episodes = num_episodes
 
 
 def gym_evaluate_genome(genome, config):
     global global_env
-    global global_penalize_inactivity
     global global_num_episodes
 
     net = neat.nn.FeedForwardNetwork.create(genome, config)
     env = global_env
-
-    def compute_action_discrete(net, observation):
-        activation = net.activate(observation)
-        action = np.argmax(activation)
-        return action, activation[action]
-
-    def compute_action_box(net, observation):
-        action = net.activate(observation)
-        norm = np.linalg.norm(action)
-        return action, norm
-
-    if isinstance(env.action_space, gymnasium.spaces.Discrete):
-        compute_action = compute_action_discrete
-    else:
-        compute_action = compute_action_box
 
     total_reward = 0.0
     for _ in range(global_num_episodes):
         observation, _ = env.reset()
         done = False
         while not done:
-            action, norm = compute_action(net, observation)
-            if (observation[2] < 0.01 or norm < 1.8) and global_penalize_inactivity:
-                total_reward -= 1
+            if isinstance(env.action_space, gymnasium.spaces.Discrete):
+                action = np.argmax(net.activate(observation))
+            else:
+                action = np.array(net.activate(observation))
+            observation, reward, terminated, truncated, _ = env.step(action)
+            total_reward += reward
+            done = terminated or truncated
+
+    return total_reward / global_num_episodes
+
+
+
+def cart_initializer(env_spec_id, env_kwargs, num_episodes):
+    global global_env
+    global global_num_episodes
+    global global_vae
+
+    global_env = gymnasium.make(env_spec_id, **env_kwargs)
+    global_num_episodes = num_episodes
+    # Load VAE model in each process
+    vae_model = VAE(32)
+    vae_model.load_state_dict(torch.load('encoding/vae.pickle', weights_only=True))
+    vae_model.to(device)
+    vae_model.eval()
+    global_vae = vae_model
+
+def cart_evaluate_genome(genome, config):
+    global global_env
+    global global_num_episodes
+    global global_vae
+
+    net = neat.nn.FeedForwardNetwork.create(genome, config)
+    env = global_env
+    vae = global_vae
+
+    total_reward = 0.0
+    for _ in range(global_num_episodes):
+        observation, _ = env.reset()
+        done = False
+        while not done:
+            with torch.no_grad():
+                # Resize and normalize observation to fit VAE input requirements
+                observation_resized = observation[20:84, 16:80, :]
+                observation_tensor = torch.from_numpy(observation_resized).float().to(device)
+
+                x = vae.preprocess(observation_tensor)
+                mu, log_var = vae.encoder(x)
+                z = vae.reparameterize(mu, log_var)
+                # Detach z, convert to numpy, and flatten for action computation
+                z_np = z.detach().cpu().numpy().flatten()
+
+            # Compute action using the latent vector z
+            if isinstance(env.action_space, gymnasium.spaces.Discrete):
+                action = np.argmax(net.activate(z_np))
+            else:
+                action = np.array(net.activate(z_np))
+
             observation, reward, terminated, truncated, _ = env.step(action)
             total_reward += reward
             done = terminated or truncated
@@ -69,6 +109,12 @@ class VideoLogFunction:
         self.visualisation_interval = visualisation_interval
 
     def __call__(self, current_generation, best_genome, config):
+        vae = VAE(32)
+        vae.load_state_dict(torch.load('encoding/vae.pickle', map_location=device, weights_only=True))
+        vae.to(device)
+        vae.eval()
+
+
         # Decide whether to log the video based on the generation interval
         if current_generation % self.visualisation_interval == 0:
             # Create the environment with render_mode='rgb_array' for video recording
@@ -79,16 +125,23 @@ class VideoLogFunction:
             done = False
             step = 0
             while not done:
+                with torch.no_grad():
+                    observation_resized = observation[20:84, 16:80, :]
+                    observation_tensor = torch.from_numpy(observation_resized).float().to(device)
+                    x = vae.preprocess(observation_tensor)
+                    mu, log_var = vae.encoder(x)
+                    z = vae.reparameterize(mu, log_var)
+                    z_np = z.detach().numpy().flatten()
+
                 if isinstance(env.action_space, gymnasium.spaces.Discrete):
-                    action = np.argmax(net.activate(observation))
+                    action = np.argmax(net.activate(z_np))
                 else:
-                    action = net.activate(observation)
+                    action = np.array(net.activate(z_np))
                 observation, _, terminated, truncated, _ = env.step(action)
                 frame = env.render()
                 frames.append(frame.transpose(2, 0, 1))  # Adjust dimensions for wandb.Video
                 done = terminated or truncated
                 step += 1
-            print(f"Generation {current_generation}: Video recorded with {step} steps")
 
             numpy_array_video = np.array(frames)
 
@@ -97,7 +150,7 @@ class VideoLogFunction:
             return None
 
 
-def run(config_file: str, env, penalize_inactivity=False, num_generations=None, checkpoint=None,
+def run(config_file: str, env, num_generations=None, checkpoint=None,
         num_tests=5, num_cores=1, wandb_project_name=None, show_species_detail=True, record_video=False):
     print("Charging environment:", env.spec.id)
     local_dir = os.path.dirname(__file__)
@@ -132,12 +185,11 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None, 
     #     time_interval_seconds=1800,
     #     filename_prefix="checkpoint-" + env.spec.id + "-"
     # ))
-
     pe = neat.parallel.ParallelEvaluator(
         num_workers=num_cores,
-        eval_function=gym_evaluate_genome,
-        initializer=gym_initializer,
-        initargs=(env.spec.id, env.spec.kwargs, penalize_inactivity, num_tests)
+        eval_function=cart_evaluate_genome,
+        initializer=cart_initializer,
+        initargs=(env.spec.id, env.spec.kwargs, num_tests)
     )
 
     print("Configuration", pop.config.genome_config)
@@ -149,24 +201,20 @@ def run(config_file: str, env, penalize_inactivity=False, num_generations=None, 
     with open(os.path.join(result_path, 'best_genome.pickle'), 'wb') as f:
         pickle.dump(gen_best, f)
 
-    gym_initializer(env.spec.id, env.spec.kwargs, penalize_inactivity, num_tests)
-    score = gym_evaluate_genome(gen_best, config)
+    cart_initializer(env.spec.id, env.spec.kwargs, num_tests)
+    score = cart_evaluate_genome(gen_best, config)
 
     return score
 
 
-
 if __name__ == '__main__':
     env_instance = gymnasium.make(
-        'Ant-v5',
-        terminate_when_unhealthy=True,
-        healthy_z_range=(0.2, 2.0),
+        'CarRacing-v3',
     )
 
-    run(config_file="config-ant",
+    run(config_file="config-car_racing",
         env=env_instance,
-        penalize_inactivity=False,
-        num_generations=500,
+        num_generations=1000,
         num_tests=2,
         num_cores=cpu_count(),
         wandb_project_name="neat-gym",

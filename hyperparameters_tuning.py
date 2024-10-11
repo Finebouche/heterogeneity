@@ -110,7 +110,7 @@ if __name__ == '__main__':
     # Initialize the sweep
     for num_hidden in [5]:
         sweep_configuration = {
-            "name": f"sweep-mnist-{num_hidden}",
+            "name": f"sweep-{problem}-{num_hidden}",
             "method": "bayes",
             "metric": {"goal": "maximize", "name": "val_score"},
             "parameters": {

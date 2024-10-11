@@ -2,7 +2,7 @@ from evolve_mnist import run as run_mnist
 from evolve_gym import run as run_gym
 from config_files_utils import create_temp_config_file
 import os
-import sys
+
 import wandb
 import gymnasium
 
@@ -55,7 +55,6 @@ if __name__ == '__main__':
         score = run_gym(
             config_file=temp_config_file,
             env=env_instance,
-            penalize_inactivity=False,
             num_generations=int(os.environ['NUM_GENERATIONS']),
             num_tests=2,
             num_cores=int(os.environ['CPUS_PER_JOB']),

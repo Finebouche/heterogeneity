@@ -1,13 +1,14 @@
 import wandb
 from neat.reporting import BaseReporter
 import numpy as np
-
+from visualization import draw_net
 
 class WandbReporter(BaseReporter):
-    def __init__(self, project_name, config, tags=None, api_key=None, video_log_function=None):
+    def __init__(self, project_name, tags, api_key, log_config, log_network, video_log_function=None):
         super().__init__()
         self.project_name = project_name
-        self.config = config
+        self.log_config = log_config
+        self.log_network = log_network
         self.tags = tags
         self.current_generation = None
         self.video_log_function = video_log_function
@@ -16,8 +17,8 @@ class WandbReporter(BaseReporter):
         if api_key is not None:
             wandb.login(key=api_key)
         # Initialize wandb run
-        if self.config is not None:
-            wandb.init(project=self.project_name, config=self.config, tags=self.tags)
+        if self.log_config is not None:
+            wandb.init(project=self.project_name, config=self.log_config, tags=self.tags)
         else:
             wandb.init(project=self.project_name, tags=self.tags)
 
@@ -54,6 +55,11 @@ class WandbReporter(BaseReporter):
             numpy_array_video = self.video_log_function(self.current_generation, best_genome, config)
             if numpy_array_video is not None:
                 wandb.log({"video": wandb.Video(numpy_array_video, fps=15, format="gif")})
+
+        if self.log_network:
+            # Log the best genome network
+            draw_net = best_genome.visualize()
+            wandb.log({"network_drawing": draw_net})
 
     def end_generation(self, config, population, species_set):
         pass

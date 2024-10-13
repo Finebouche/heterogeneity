@@ -12,6 +12,7 @@ dependencies:
   - pip:
       - git+https://github.com/Finebouche/neat-python.git # -e ../../other/neat-python
       - wandb
+      - graphviz
       - torch
       - torchvision
       - torchaudio

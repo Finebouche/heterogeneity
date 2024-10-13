@@ -8,7 +8,7 @@ from tqdm import tqdm
 import gymnasium as gym
 
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu'
 torch.manual_seed(0)
 
 # Function to collect and resize frames from the environment

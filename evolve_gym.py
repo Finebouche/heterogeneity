@@ -173,18 +173,18 @@ def run(config_file: str, env, num_generations=None, checkpoint=None,
         video_log_function = None
     wandb_reporter = WandbReporter(
         project_name=wandb_project_name,
-        config=config_dict,
-        tags=["neat", env.spec.id],
+        tags=[env.spec.id],
         api_key=wandb_key,
+        log_config=config_dict,
+        log_network=True,
         video_log_function=video_log_function
     )
     pop.add_reporter(wandb_reporter)
     pop.add_reporter(neat.StdOutReporter(show_species_detail))
-    # pop.add_reporter(neat.Checkpointer(
-    #     generation_interval=int(num_generations / 10),
-    #     time_interval_seconds=1800,
-    #     filename_prefix="checkpoint-" + env.spec.id + "-"
-    # ))
+    pop.add_reporter(neat.Checkpointer(
+        generation_interval=300,
+        filename_prefix="checkpoint-" + env.spec.id + "-"
+    ))
     pe = neat.parallel.ParallelEvaluator(
         num_workers=num_cores,
         eval_function=cart_evaluate_genome,

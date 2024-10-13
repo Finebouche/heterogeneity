@@ -12,6 +12,8 @@ import torch
 from encoding.vae import VAE  # Replace 'vae_model' with the actual module name
 
 device = 'cpu'
+device = torch.device("cpu")
+torch.set_num_threads(1)
 
 # Global variables to be initialized in each process
 global_env = None

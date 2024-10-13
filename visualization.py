@@ -90,9 +90,12 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
             net_graph.edge(str(cg.key[0]), str(cg.key[1]), _attributes=attrs)
 
 
-    net_graph.render(filename, view=view)
+    if filename:
+        rendering = net_graph.render(filename, view=view, format=fmt)
+    else:
+        rendering = net_graph.pipe(format=fmt)
 
-    return net_graph
+    return rendering
 
 
 if __name__ == '__main__':
@@ -111,4 +114,4 @@ if __name__ == '__main__':
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_path)
-    draw_net(config, gen_best, view=False, filename=result_path + "/win-net.gv")
+    draw_net(config, gen_best, view=False, fmt="svg", filename=result_path + "/win-net.gv")

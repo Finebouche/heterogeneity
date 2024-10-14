@@ -11,7 +11,6 @@ from config_files_utils import config_to_dict
 import torch
 from encoding.vae import VAE  # Replace 'vae_model' with the actual module name
 
-device = 'cpu'
 device = torch.device("cpu")
 torch.set_num_threads(1)
 
@@ -49,8 +48,6 @@ def gym_evaluate_genome(genome, config):
             done = terminated or truncated
 
     return total_reward / global_num_episodes
-
-
 
 def cart_initializer(env_spec_id, env_kwargs, num_episodes):
     global global_env
@@ -184,7 +181,7 @@ def run(config_file: str, env, num_generations=None, checkpoint=None,
     pop.add_reporter(wandb_reporter)
     pop.add_reporter(neat.StdOutReporter(show_species_detail))
     pop.add_reporter(neat.Checkpointer(
-        generation_interval=300,
+        generation_interval=100,
         filename_prefix="checkpoint-" + env.spec.id + "-"
     ))
     pe = neat.parallel.ParallelEvaluator(

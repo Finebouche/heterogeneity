@@ -18,6 +18,7 @@ class WandbReporter(BaseReporter):
         # Authenticate with wandb if api_key is provided
         if api_key is not None:
             wandb.login(key=api_key)
+
         # Initialize wandb run
         if self.log_config is not None:
             wandb.init(project=self.project_name, config=self.log_config, tags=self.tags)

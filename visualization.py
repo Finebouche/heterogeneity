@@ -76,14 +76,21 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
         net_graph.node(str(k), _attributes=attrs)
 
     for cg in genome.connections.values():
-        if cg.enabled or show_disabled:
+        if cg.enabled:
             attrs = {
-                'style': 'solid' if cg.enabled else 'dotted',
+                'style': 'solid',
                 'color': 'lightblue',
                 'penwidth': str(0.1 + abs(cg.weight / 3.0)),
                 'arrowhead': 'none'  # No arrowhead on the edge
             }
-            net_graph.edge(str(cg.key[0]), str(cg.key[1]), _attributes=attrs)
+        if not cg.enabled and show_disabled:
+            attrs = {
+                'style': 'dotted',
+                'color': 'lightblue',
+                'penwidth': str(0.1 + abs(cg.weight / 3.0)),
+                'arrowhead': 'none'  # No arrowhead on the edge
+            }
+        net_graph.edge(str(cg.key[0]), str(cg.key[1]), _attributes=attrs)
 
     # Enforce input nodes to be on the first layer and output nodes on the last layer
     input_node_names = [str(k) for k in config.genome_config.input_keys]

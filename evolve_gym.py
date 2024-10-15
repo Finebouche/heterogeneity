@@ -165,7 +165,7 @@ def run(config_file: str, env, num_generations=None, checkpoint=None,
 
     with open("wandb_api_key.txt", "r") as f:
         wandb_key = f.read().strip()
-    config_dict = config_to_dict(config_file)
+    config_dict = config_to_dict(config_path)
     if record_video:
         video_log_function = VideoLogFunction(env.spec.id, env.spec.kwargs, visualisation_interval=int(num_generations / 10))
     else:

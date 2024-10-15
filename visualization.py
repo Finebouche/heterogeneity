@@ -41,7 +41,6 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
         'fixedsize': 'true'
     }
 
-
     graph_attrs = {
         'rankdir': 'LR',          # Left to right direction
         'ranksep': '3.0',         # Increase the distance between ranks
@@ -55,17 +54,14 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
     inputs = set()
     for k in config.genome_config.input_keys:
         inputs.add(k)
-        name = node_names.get(k, str(k))
-        input_attrs = {'style': 'filled', 'fillcolor': 'white'}
-        net_graph.node(name, xlabel=name, _attributes=input_attrs)  # Move label outside the node using xlabel
+        input_attrs = {'style': 'filled', 'fillcolor': 'white', 'xlabel': node_names.get(k, str(k))}
+        net_graph.node(str(k), _attributes=input_attrs)  # Move label outside the node using xlabel
 
     outputs = set()
     for k in config.genome_config.output_keys:
         outputs.add(k)
-        name = node_names.get(k, str(k))
-        output_attrs = {'style': 'filled', 'fillcolor': 'lightblue'}
-
-        net_graph.node(name, xlabel=name, _attributes=output_attrs)  # Move label outside the node using xlabel
+        output_attrs = {'style': 'filled', 'fillcolor': 'lightblue', 'xlabel': node_names.get(k, str(k))}
+        net_graph.node(str(k), _attributes=output_attrs)  # Move label outside the node using xlabel
 
     used_nodes = set(genome.nodes.keys())
     for k in used_nodes:
@@ -89,6 +85,12 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
             }
             net_graph.edge(str(cg.key[0]), str(cg.key[1]), _attributes=attrs)
 
+    # Enforce input nodes to be on the first layer and output nodes on the last layer
+    input_node_names = [str(k) for k in config.genome_config.input_keys]
+    net_graph.body.append('{rank=min; ' + '; '.join(input_node_names) + ';}')
+
+    output_node_names = [str(k) for k in config.genome_config.output_keys]
+    net_graph.body.append('{rank=max; ' + '; '.join(output_node_names) + ';}')
 
     if filename:
         rendering = net_graph.render(filename, view=view, format=fmt)

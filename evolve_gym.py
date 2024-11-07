@@ -79,7 +79,7 @@ def gym_evaluate_genome(genome, config):
         done = False
         while not done:
             if global_vae is not None:
-                input_data = process_observation_with_vae(observation, global_vae, device)
+                input_data = process_observation_with_vae(observation, vae, device)
             else:
                 input_data = observation
 
@@ -199,7 +199,7 @@ def run(config_file: str, env, num_generations=None, checkpoint=None,
 
 
     # Evaluate the best genome
-    gym_initializer(env.spec.id, env.spec.kwargs, num_tests)
+    gym_initializer(env.spec.id, env.spec.kwargs, num_tests, unique_value, random_values, vae_path)
     score = gym_evaluate_genome(best_genome, config)
     return score
 

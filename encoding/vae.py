@@ -7,9 +7,15 @@ import numpy as np
 from tqdm import tqdm
 import gymnasium as gym
 
-
-device = 'cpu'
 torch.manual_seed(0)
+
+def load_vae_model(vae_path, device):
+    """Load and return the VAE model."""
+    vae_model = VAE(32)
+    vae_model.load_state_dict(torch.load(vae_path, map_location=device, weights_only=True))
+    vae_model.to(device)
+    vae_model.eval()
+    return vae_model
 
 # Function to collect and resize frames from the environment
 def generate_dataset(env_name='CarRacing-v3', num_frame=10000):
@@ -53,7 +59,8 @@ class Encoder(nn.Module):
         x = F.relu(self.conv2(x))   # x shape: N x 64 x 14 x 14
         x = F.relu(self.conv3(x))   # x shape: N x 128 x 6 x 6
         x = F.relu(self.conv4(x))   # x shape: N x 256 x 2 x 2
-        x = x.contiguous().view(x.size(0), -1)   # Flatten
+        x = x.contiguous().view(x.size(0), -1)  # Make contiguous before flattening
+
         mu = self.fc_mu(x)
         log_var = self.fc_logvar(x)
         return mu, log_var
@@ -70,7 +77,7 @@ class Decoder(nn.Module):
 
     def forward(self, z):
         x = self.fc(z)
-        x = x.view(-1, 1024, 1, 1)
+        x = x.contiguous().view(-1, 1024, 1, 1)  # Make contiguous before reshaping
         x = F.relu(self.deconv1(x))   # x shape: N x 128 x 5 x 5
         x = F.relu(self.deconv2(x))   # x shape: N x 64 x 13 x 13
         x = F.relu(self.deconv3(x))   # x shape: N x 32 x 30 x 30
@@ -90,11 +97,10 @@ class VAE(nn.Module):
         return mu + eps * std
 
     def preprocess(self, x):
-        # Normalize and reshape input
         if x.dim() == 3:  # Single image (H, W, C)
             x = x.unsqueeze(0)  # Make it (1, H, W, C) to simulate a batch of size 1
         x = x.float() / 255.0  # Normalize images to [0, 1]
-        x = x.permute(0, 3, 1, 2)  # Transpose from (N, H, W, C) to (N, C, H, W)
+        x = x.permute(0, 3, 1, 2).contiguous()  # Transpose and make contiguous
         return x
 
     def forward(self, x):
@@ -104,7 +110,7 @@ class VAE(nn.Module):
         return self.decoder(z), mu, log_var
 
 # Training function for the VAE
-def train_vae(vae, data_loader, epochs=1):
+def train_vae(vae, data_loader, epochs, device):
     optimizer = torch.optim.Adam(vae.parameters())
     vae.train()
 
@@ -112,12 +118,16 @@ def train_vae(vae, data_loader, epochs=1):
     for epoch in tqdm(range(epochs), desc="Epochs"):
         # Inner loop for batches
         for x_batch, in tqdm(data_loader, desc=f"Training Epoch {epoch + 1}", leave=False):
-            x = x_batch.to(device)
+            x = x_batch.float().to(device)
             optimizer.zero_grad()
             x_hat, mu, log_var = vae(x)
 
             # Ensure that x is in the correct shape/format before loss calculation
-            x_preprocessed = vae.preprocess(x)  # We apply preprocess to ensure compatibility in the loss function
+            x_preprocessed = vae.preprocess(x)  # Applies preprocess() to ensure compatibility in the loss function
+
+            # Make tensors contiguous before computing loss
+            x_hat = x_hat.contiguous()
+            x_preprocessed = x_preprocessed.contiguous()
 
             # Reconstruction loss: Note x is already preprocessed in forward, so use x_preprocessed for correct comparison
             recon_loss = F.mse_loss(x_hat, x_preprocessed, reduction='sum')
@@ -145,13 +155,15 @@ if __name__ == '__main__':
 
     # Instantiate the VAE model
     latent_dims = 32  # Set Nz to 32 for the Car Racing task
+    device = "cpu" # "mps" or "cuda" or "cpu"
+
     vae = VAE(latent_dims).to(device)
 
     # Train the VAE
-    vae = train_vae(vae, data_loader, epochs=20)
+    vae = train_vae(vae, data_loader, epochs=20, device=device)
 
     # Visualize reconstructions
     show_reconstruction(vae, data_loader, device, n_images=5)
 
     # Save the trained model
-    torch.save(vae.state_dict(), 'vae.pickle')
+    torch.save(vae.state_dict(), f"vae_{device}.pickle")

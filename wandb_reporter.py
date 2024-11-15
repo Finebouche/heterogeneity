@@ -1,9 +1,13 @@
-import wandb
 from neat.reporting import BaseReporter
+import wandb
+
+from PIL import Image
 import numpy as np
 from visualization import draw_net
 import io
-from PIL import Image
+
+import pickle
+import os
 
 class WandbReporter(BaseReporter):
     def __init__(self, project_name, tags, api_key, log_config, log_network, video_log_function=None):
@@ -20,10 +24,13 @@ class WandbReporter(BaseReporter):
             wandb.login(key=api_key)
 
         # Initialize wandb run
-        if self.log_config is not None:
-            wandb.init(project=self.project_name, config=self.log_config, tags=self.tags)
-        else:
-            wandb.init(project=self.project_name, tags=self.tags)
+        wandb.init(
+            project=self.project_name,
+            config=self.log_config,
+            tags=self.tags,
+            dir='/tmp',
+            settings=wandb.Settings(save_code=False, code_dir=None)
+        )
 
     def start_generation(self, generation):
         self.current_generation = generation
@@ -82,6 +89,13 @@ class WandbReporter(BaseReporter):
             numpy_array_video = self.video_log_function(self.current_generation, best, config)
             if numpy_array_video is not None:
                 wandb.log({"video": wandb.Video(numpy_array_video, fps=15, format="gif")})
+        # also log the best model as pickle
+        with open("best_model.pkl", "wb") as f:
+            pickle.dump(best, f)
+        artifact = wandb.Artifact('best_model', type='model')
+        artifact.add_file('best_model.pkl')
+        wandb.log_artifact(artifact)
+        os.remove("best_model.pkl")
 
     def species_stagnant(self, sid, species):
         pass

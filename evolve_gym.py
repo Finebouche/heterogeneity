@@ -8,7 +8,7 @@ import gymnasium
 import torch
 
 from config_files_utils import config_to_dict
-from encoding.vae import VAE
+from encoding.vae import load_vae_model
 from wandb_reporter import WandbReporter
 
 device = torch.device("cpu")
@@ -20,14 +20,6 @@ global_num_episodes = None
 global_vae = None
 global_unique_value = None
 global_random_values = None
-
-def load_vae_model(vae_path, device):
-    """Load and return the VAE model."""
-    vae_model = VAE(32)
-    vae_model.load_state_dict(torch.load(vae_path, map_location=device, weights_only=True))
-    vae_model.to(device)
-    vae_model.eval()
-    return vae_model
 
 def process_observation_with_vae(observation, vae, device):
     """Process the observation using the VAE."""
@@ -203,7 +195,6 @@ def run(config_file: str, env, num_generations=None, checkpoint=None,
     score = gym_evaluate_genome(best_genome, config)
     return score
 
-
 if __name__ == '__main__':
     env_instance = gymnasium.make('CarRacing-v3')
 
@@ -216,7 +207,7 @@ if __name__ == '__main__':
         record_video=True,
         unique_value=None,
         random_values=None,
-        vae_path = 'encoding/vae.pickle'  # Specify the path to your VAE model
-    )
+        vae_path ='encoding/vae_cpu.pickle'  # Specify the path to your VAE model
+        )
 
     env_instance.close()

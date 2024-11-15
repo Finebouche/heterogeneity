@@ -1,6 +1,5 @@
 import torch
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 if __name__ == '__main__':
     from vae import VAE, train_vae
@@ -16,6 +15,7 @@ if __name__ == '__main__':
 
     env = gym.make('CarRacing-v3')
     frames = []
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Collect data with progress bar
     with tqdm(total=num_frame, desc="Collecting frames") as pbar:

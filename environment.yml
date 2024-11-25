@@ -1,4 +1,4 @@
-name: neat_het_env
+name: het_env
 channels:
   - pytorch
   - nvidia

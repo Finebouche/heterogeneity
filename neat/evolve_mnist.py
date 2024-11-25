@@ -2,7 +2,7 @@ import os
 import pickle
 import multiprocessing
 from wandb_reporter import WandbReporter
-from config_files_utils import config_to_dict
+from neat.config_files.config_files_utils import config_to_dict
 
 import neat
 from torchvision import datasets, transforms
@@ -104,7 +104,7 @@ def run(config_file: str, num_generations=None, checkpoint=None, num_cores=1, su
         pop = neat.Population(config)
 
     if wandb_project_name is not None:
-        with open("wandb_api_key.txt", "r") as f:
+        with open("../wandb_api_key.txt", "r") as f:
             wandb_key = f.read().strip()
 
         # load the config file to pass it to wandb
@@ -139,7 +139,7 @@ def run(config_file: str, num_generations=None, checkpoint=None, num_cores=1, su
     gen_best = pop.run(pe.evaluate, num_generations)
 
     # Save the best model
-    result_path = os.path.join("visualisations", "mnist")
+    result_path = os.path.join("../visualisations", "mnist")
     os.makedirs(result_path, exist_ok=True)
     with open(os.path.join(result_path, 'best_genome.pickle'), 'wb') as f:
         pickle.dump(gen_best, f)

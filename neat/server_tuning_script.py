@@ -1,6 +1,6 @@
-from evolve_mnist import run as run_mnist
-from evolve_gym import run as run_gym
-from config_files_utils import create_temp_config_file
+from neat.evolve_mnist import run as run_mnist
+from neat.evolve_gym import run as run_gym
+from neat.config_files.config_files_utils import create_temp_config_file
 import os
 
 import wandb
@@ -17,7 +17,7 @@ if __name__ == '__main__':
         wandb.init(project="neat-mnist")
 
         # Create a temporary config file with these hyperparameters
-        temp_config_file = create_temp_config_file("config_files/config-mnist", wandb.config)
+        temp_config_file = create_temp_config_file("neat/config_files/config-mnist", wandb.config)
         # print file
         with open(temp_config_file, 'r') as f:
             print(f.read())
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         wandb.init(project="neat-gym")
 
         # Create a temporary config file with these hyperparameters
-        temp_config_file = create_temp_config_file("config_files/config-ant", wandb.config)
+        temp_config_file = create_temp_config_file("neat/config_files/config-ant", wandb.config)
         # print file
         with open(temp_config_file, 'r') as f:
             print(f.read())
@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
         env_instance.close()
 
-    with open("wandb_api_key.txt", "r") as f:
+    with open("../wandb_api_key.txt", "r") as f:
         wandb_key = f.read().strip()
     wandb.login(key=wandb_key)
 

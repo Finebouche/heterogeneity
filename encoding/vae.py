@@ -18,7 +18,7 @@ def load_vae_model(vae_path, device):
     return vae_model
 
 # Function to collect and resize frames from the environment
-def generate_dataset(env_name='CarRacing-v3', num_frame=10000):
+def generate_dataset_gymnasium(env_name='CarRacing-v3', num_frame=10000):
     # Setup the environment
     env = gym.make(env_name)
     frames = []
@@ -146,10 +146,8 @@ if __name__ == '__main__':
     from utils import show_reconstruction
 
     # Collect and preprocess data
-    frames = generate_dataset(num_frame=10000)
+    frames = generate_dataset_gymnasium(num_frame=10000)
     frames = np.array(frames)  # Just convert to array, no other processing
-
-    # Create a TensorDataset without additional preprocessing
     dataset = TensorDataset(torch.from_numpy(frames))
     data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 

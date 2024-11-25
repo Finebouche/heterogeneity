@@ -7,7 +7,7 @@ import neat
 import gymnasium
 import torch
 
-from config_files_utils import config_to_dict
+from neat.config_files.config_files_utils import config_to_dict
 from encoding.vae import load_vae_model
 from wandb_reporter import WandbReporter
 
@@ -140,7 +140,7 @@ def run(config_file: str, env, num_generations=None, checkpoint=None,
 
     pop = neat.Checkpointer.restore_checkpoint(checkpoint, config) if checkpoint else neat.Population(config)
 
-    with open("wandb_api_key.txt", "r") as f:
+    with open("../wandb_api_key.txt", "r") as f:
         wandb_key = f.read().strip()
     config_dict = config_to_dict(config_path)
 
@@ -207,7 +207,7 @@ if __name__ == '__main__':
         record_video=True,
         unique_value=None,
         random_values=None,
-        vae_path ='encoding/vae_cpu.pickle'  # Specify the path to your VAE model
+        vae_path ='../encoding/vae_cpu.pickle'  # Specify the path to your VAE model
         )
 
     env_instance.close()

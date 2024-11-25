@@ -3,7 +3,7 @@ import wandb
 
 from PIL import Image
 import numpy as np
-from visualization import draw_net
+from neat.visualization import draw_net
 import io
 
 import pickle

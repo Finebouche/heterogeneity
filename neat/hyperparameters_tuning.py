@@ -3,7 +3,6 @@ import json
 import time
 import tempfile
 import wandb
-from itertools import product
 
 
 def submit_job(job_definition):

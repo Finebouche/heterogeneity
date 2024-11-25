@@ -4,7 +4,6 @@ import torch
 if __name__ == '__main__':
     from vae import VAE, train_vae
     from torch.utils.data import TensorDataset, DataLoader
-    from vae import generate_dataset
     import numpy as np
     from utils import show_reconstruction
     import matplotlib.pyplot as plt

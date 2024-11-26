@@ -1,5 +1,5 @@
 /wandb/
 /.idea/
-/data/
+/datasets/
 /visualisations/
 /encoding/vae_*.pickle

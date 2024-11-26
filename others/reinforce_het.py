@@ -8,7 +8,7 @@ from stable_baselines3.common.policies import ActorCriticPolicy
 from torch import nn
 
 from encoding.vae import load_vae_model
-from utils import draw_het_network, WandbCallback
+from utils import WandbCallback, HetNetwork
 
 class VAEFeatureExtractor(BaseFeaturesExtractor):
     def __init__(self, observation_space, vae, vae_device):
@@ -32,34 +32,6 @@ class VAEFeatureExtractor(BaseFeaturesExtractor):
             z = z.view(z.size(0), -1)  # Flatten
         return z
 
-
-# A simple neural network with 5 neurons and different activation functions
-class HetNetwork(nn.Module):
-    def __init__(self, input_dim, output_dim, number_of_neurons=5, activation_funcs=None):
-        super(HetNetwork, self).__init__()
-
-        self.neurons = nn.ModuleList([
-            nn.Linear(input_dim, 1) for _ in range(number_of_neurons)
-        ])
-
-        if activation_funcs is None:
-            # Default activation functions
-            activation_funcs = [nn.ReLU(), nn.Tanh(), nn.Sigmoid(), nn.LeakyReLU(), nn.ELU()]
-        self.activation_funcs = nn.ModuleList(activation_funcs)
-
-        self.output_layer = nn.Linear(number_of_neurons, output_dim)
-
-    def forward(self, x):
-        # Apply each neuron with its activation function
-        outputs = []
-        for neuron, activation in zip(self.neurons, self.activation_funcs):
-            out = activation(neuron(x))
-            outputs.append(out)
-        # Concatenate the outputs
-        out = torch.cat(outputs, dim=1)
-        # Pass through the output layer
-        out = self.output_layer(out)
-        return out
 
 class IdentityMlpExtractor(nn.Module):
     def __init__(self, feature_dim):

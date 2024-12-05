@@ -6,9 +6,9 @@
 	<em>Exploring the heterogeneity-span tradeoff</em>
 </p>
 <p align="center">
-	<img src="https://img.shields.io/github/license/Finebouche/heterogeneity?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
-	<img src="https://img.shields.io/github/last-commit/Finebouche/heterogeneity?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
-	<img src="https://img.shields.io/github/languages/top/Finebouche/heterogeneity?style=default&color=0080ff" alt="repo-top-language">
+	<img src="https://img.shields.io/github/license/Finebouche/heterogeneity" alt="license">
+	<img src="https://img.shields.io/github/last-commit/Finebouche/heterogeneity" alt="last-commit">
+	<img src="https://img.shields.io/github/languages/top/Finebouche/heterogeneity" alt="repo-top-language">
 </p>
 <p align="center"><!-- default option, no dependency badges. -->
 </p>

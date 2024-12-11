@@ -8,7 +8,8 @@ from stable_baselines3.common.policies import ActorCriticPolicy
 from torch import nn
 
 from encoding.vae import load_vae_model
-from utils import WandbCallback, HetNetwork
+from het_network import HetNetwork
+from utils import WandbCallback
 
 class VAEFeatureExtractor(BaseFeaturesExtractor):
     def __init__(self, observation_space, vae, vae_device):

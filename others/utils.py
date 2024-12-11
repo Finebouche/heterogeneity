@@ -1,72 +1,13 @@
 import numpy as np
 import wandb
 from stable_baselines3.common.callbacks import BaseCallback
-import torch
-from torch import nn
 
 import time
 import graphviz
 from PIL import Image
 import io
 
-# A simple neural network with customizable neurons and activation functions
-class HetNetwork(nn.Module):
-    def __init__(self, input_dim, output_dim, number_of_neurons=5, activation_funcs=None):
-        super(HetNetwork, self).__init__()
-
-        self.neurons = nn.ModuleList([
-            nn.Linear(input_dim, 1) for _ in range(number_of_neurons)
-        ])
-
-        # Map of available activation functions
-        activation_functions_map = {
-            'sigmoid': nn.Sigmoid(),
-            'tanh': nn.Tanh(),
-            'relu': nn.ReLU(),
-            'leaky_relu': nn.LeakyReLU(),
-            'gelu': nn.GELU(),
-            'softplus': nn.Softplus(),
-            # Add more activation functions as needed
-        }
-
-        if activation_funcs is None:
-            # Default activation functions
-            activation_funcs = ['relu', 'tanh', 'sigmoid', 'leaky_relu', 'elu']
-
-        # Check if activation_funcs is a list of strings or nn.Module instances
-        if all(isinstance(act, str) for act in activation_funcs):
-            # Convert activation function names to instances
-            try:
-                self.activation_funcs = nn.ModuleList([
-                    activation_functions_map[act.lower()] for act in activation_funcs
-                ])
-            except KeyError as e:
-                raise ValueError(f"Activation function '{e.args[0]}' is not recognized. "
-                                 f"Available functions are: {list(activation_functions_map.keys())}")
-        elif all(isinstance(act, nn.Module) for act in activation_funcs):
-            self.activation_funcs = nn.ModuleList(activation_funcs)
-        else:
-            raise TypeError("activation_funcs must be a list of strings or nn.Module instances.")
-
-        if len(self.activation_funcs) != number_of_neurons:
-            raise ValueError("The number of activation functions must match the number of neurons.")
-
-        self.output_layer = nn.Linear(number_of_neurons, output_dim)
-
-    def forward(self, x):
-        # Apply each neuron with its activation function
-        outputs = []
-        for neuron, activation in zip(self.neurons, self.activation_funcs):
-            out = activation(neuron(x))
-            outputs.append(out)
-        # Concatenate the outputs
-        out = torch.cat(outputs, dim=1)
-        # Pass through the output layer
-        out = self.output_layer(out)
-        return out
-
 def draw_het_network(model, format='png'):
-
     node_attrs = {
         'shape': 'circle',
         'fontsize': '10',
@@ -82,7 +23,6 @@ def draw_het_network(model, format='png'):
         'nodesep': '0.1',         # Increase the distance between nodes
         'outputorder': 'edgesfirst',  # Draw edges first
     }
-
 
     # Create a Digraph
     dot = graphviz.Digraph(format=format, node_attr=node_attrs, graph_attr=graph_attrs    )
@@ -154,10 +94,8 @@ class WandbCallback(BaseCallback):
         # Initialize wandb run
         wandb.init(project=self.project_name, tags=self.tags)
 
-
     def _on_step(self) -> bool:
         return True
-
 
     def _on_rollout_end(self):
         # Increment the iteration counter

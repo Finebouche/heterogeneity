@@ -15,20 +15,11 @@ from tqdm import tqdm
 import pandas as pd
 
 transform = transforms.Compose([transforms.ToTensor()])
-TRAIN_DATASET = None
-TEST_DATASET = None
+TRAIN_DATASET = datasets.MNIST(root='../datasets', train=True, download=True, transform=transform)
+TEST_DATASET = datasets.MNIST(root='../datasets', train=False, download=True, transform=transform)
 DEVICE = torch.device('cpu')
 
-def init_datasets():
-    global TRAIN_DATASET, TEST_DATASET
-    if TRAIN_DATASET is None or TEST_DATASET is None:
-        transform = transforms.Compose([transforms.ToTensor()])
-        TRAIN_DATASET = datasets.MNIST(root='../datasets', train=True, download=True, transform=transform)
-        TEST_DATASET = datasets.MNIST(root='../datasets', train=False, download=True, transform=transform)
-
 def load_data(batch_size, train_indices=None, val_indices=None):
-    init_datasets()
-
     if train_indices is not None and val_indices is not None:
         train_dataset = Subset(TRAIN_DATASET, train_indices)
         val_dataset = Subset(TRAIN_DATASET, val_indices)

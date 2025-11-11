@@ -2,17 +2,16 @@ name: het_env
 channels:
   - pytorch
   - nvidia
-  - conda-forge
 dependencies:
-  - python=3.11
   - matplotlib
   - scikit-learn
   - seaborn
   - swig
   - ffmpeg
+  - tqdm
   - pip
   - pip:
-      - git+https://github.com/Finebouche/neat-python.git # -e ../../other/neat-python
+      - neat-python
       - wandb
       - graphviz
       - torch

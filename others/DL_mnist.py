@@ -3,42 +3,33 @@ from torch import nn
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 from torch.optim import Adam
-from itertools import product
-import random
+
 import numpy as np
-from itertools import permutations
+import itertools
+from itertools import combinations_with_replacement, product
 
 from het_network import HetNetwork
-from utils import draw_het_network
 import multiprocessing
 from tqdm import tqdm
-import time
 import pandas as pd
 
+transform = transforms.Compose([transforms.ToTensor()])
+
+TRAIN_DATASET = datasets.MNIST(root='../datasets', train=True, download=True, transform=transform)
+TEST_DATASET = datasets.MNIST(root='../datasets', train=False, download=True, transform=transform)
+DEVICE = torch.device('cpu')
+
 def load_data(batch_size, train_indices=None, val_indices=None):
-
-    transform = transforms.Compose([transforms.ToTensor(),])
-
-    full_train_dataset = datasets.MNIST(root='../datasets', train=True, download=True, transform=transform)
-
     if train_indices is not None and val_indices is not None:
-        # Create subsets for training and validation
-        train_dataset = Subset(full_train_dataset, train_indices)
-        val_dataset = Subset(full_train_dataset, val_indices)
+        train_dataset = Subset(TRAIN_DATASET, train_indices)
+        val_dataset = Subset(TRAIN_DATASET, val_indices)
 
-        # Create data loaders
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=batch_size)
-
         return train_loader, val_loader
     else:
-        # Load the test dataset
-        test_dataset = datasets.MNIST(root='../datasets', train=False, download=True, transform=transform)
-
-        # Use the full training dataset and test dataset
-        train_loader = DataLoader(full_train_dataset, batch_size=batch_size, shuffle=True)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size)
-
+        train_loader = DataLoader(TRAIN_DATASET, batch_size=batch_size, shuffle=True)
+        test_loader = DataLoader(TEST_DATASET, batch_size=batch_size)
         return train_loader, test_loader
 
 def train(model, device, train_loader, criterion, optimizer):
@@ -105,7 +96,7 @@ def evaluate(model, device, loader, criterion):
 
 def train_MNIST_model(num_neurons, activation_funcs, train_loader, test_loader, num_epochs=1):
 
-    device = torch.device('cpu')
+    device = DEVICE
 
     # Hyperparameters
     input_dim = 28 * 28  # MNIST images are 28x28 pixels
@@ -138,41 +129,38 @@ def train_MNIST_model(num_neurons, activation_funcs, train_loader, test_loader, 
 def process_activation_combination(args):
     """
     This function will handle one set of activation functions for all given architectures.
-
-    args = (activation_functions, architectures, num_epochs, batch_size, n_trials)
     """
     activation_architecture, num_epochs, batch_size, n_trials = args
     architecture = [len(layer) for layer in activation_architecture]
     activation_funcs = [act for layer in activation_architecture for act in layer]
-    # We'll record the results for every (architecture, activation combo)
-    results = []
 
     # Load the dataset once per call
     train_loader, test_loader = load_data(batch_size)
-    # Generate all permutations of the entire activation_functions list
-    # If activation_functions has duplicates, permutations will include distinct orderings of those duplicates.
+
+    results = []
+
+    device = DEVICE
+    input_dim = 28 * 28
+    num_classes = 10
+    learning_rate = 1e-3
+    criterion = nn.CrossEntropyLoss()
+
     accuracies = []
-    # Perform multiple trials
-    for i in range(n_trials):
+    for _ in range(n_trials):
         # Setup model for this combination
-        input_dim = 28 * 28
-        num_classes = 10
         model = HetNetwork(
             input_dim=input_dim,
             output_dim=num_classes,
             architecture=architecture,
             activation_funcs=activation_architecture
         )
-        model.to(torch.device('cpu'))
-
-        learning_rate = 1e-3
-        criterion = nn.CrossEntropyLoss()
+        model.to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
         # Train and evaluate
         for epoch in range(1, num_epochs + 1):
-            train_loss, train_accuracy = train(model, torch.device('cpu'), train_loader, criterion, optimizer)
-            test_loss, test_accuracy = evaluate(model, torch.device('cpu'), test_loader, criterion)
+            _, _ = train(model, DEVICE, train_loader, criterion, optimizer)
+            test_loss, test_accuracy = evaluate(model, DEVICE, test_loader, criterion)
 
         accuracies.append(test_accuracy)
 
@@ -189,78 +177,74 @@ def process_activation_combination(args):
     return results  # list of dictionaries
 
 if __name__ == '__main__':
-    activation_functions = ['sigmoid', 'tanh', 'relu', 'softplus', 'leaky_relu']
-    number_of_neurons = 5
     num_epochs = 10
     batch_size = 128
     n_trials = 5
 
-    architectures = [
-        [5],  # Single layer with 5 neurons
-        # [3, 2],  # Two layers: first with 3 neurons, second with 2 neurons
-        # [2, 3],  # Two layers: first with 2 neurons, second with 3 neurons
-        # [4, 1],
-        # [1, 4],
-    ]
-    # Generate all combinations (as before)
-    raw_combinations = product(activation_functions, repeat=number_of_neurons)
+    activation_functions = ['sigmoid', 'tanh', 'relu', 'softplus', 'leaky_relu']
 
-    # Convert each combination into a sorted tuple to treat it as a set (ignoring order)
-    unique_combinations = set()
-    for comb in raw_combinations:
-        canonical_form = tuple(sorted(comb))
-        unique_combinations.add(canonical_form)
-    all_activation_combinations = list(unique_combinations)
-    print(len(all_activation_combinations))
+    number_of_neurons = 10          # total neurons
+    min_neurons_per_layer = 4       # minimum per layer
+    max_layers = 2                  # maximum number of layers you want
 
-    hom_activation_combinations = [act_funcs for act_funcs in all_activation_combinations if len(set(act_funcs)) == 1]
-    het_activation_combinations = [act_funcs for act_funcs in all_activation_combinations if len(set(act_funcs)) > 1]
+    architectures = []
 
-    max_combinations = None
-    if max_combinations is not None and len(het_activation_combinations) > max_combinations:
-        het_activation_combinations = random.sample(het_activation_combinations, max_combinations)
-    total_activation_combinations = hom_activation_combinations + het_activation_combinations
-    print(f'Testing {len(total_activation_combinations)} of {len(all_activation_combinations)} activation function combinations...')
+    for n_layers in range(1, max_layers + 1):
+        # skip architectures that cannot satisfy the minimum constraint
+        if n_layers * min_neurons_per_layer > number_of_neurons:
+            continue
+
+        if n_layers == 1:
+            # all neurons in a single layer
+            architectures.append([number_of_neurons])
+        else:
+            # distribute the remaining neurons after giving min_neurons_per_layer to each layer
+            remaining = number_of_neurons - n_layers * min_neurons_per_layer
+
+            # compositions of "remaining" into n_layers non-negative parts
+            # using stars-and-bars via combinations
+            for cuts in itertools.combinations(range(remaining + n_layers - 1), n_layers - 1):
+                cuts_tuple = (-1,) + cuts + (remaining + n_layers - 1,)
+                extras = [cuts_tuple[i + 1] - cuts_tuple[i] - 1 for i in range(n_layers)]
+                sizes = [min_neurons_per_layer + e for e in extras]
+                architectures.append(sizes)
+
+    print("Architectures:", architectures)
+    # For number_of_neurons=10, min=4, max_layers=2:
+    # -> [[10], [4, 6], [5, 5], [6, 4]]
 
     activation_architectures = set()
 
-    # Loop through each architecture
-    for activation_funcs in total_activation_combinations:
-        all_unique_permutations = set(permutations(activation_funcs, len(activation_funcs)))
-        for architecture in architectures:
-            for act_funcs_flat in all_unique_permutations:
-                # Convert the flat tuple of activations into a nested list per layer
-                start = 0
-                activation_architecture = []
-                for layer_size in architecture:
-                    layer_size = int(layer_size)
-                    end = start + layer_size
-                    layer_acts = act_funcs_flat[start:end]
-                    activation_architecture.append(list(layer_acts))
-                    start = end
+    for arch in architectures:
+        # For each layer size in this architecture, enumerate all unordered activation multisets
+        per_layer_combos = []
+        for layer_size in arch:
+            layer_combos = list(combinations_with_replacement(activation_functions, layer_size))
+            per_layer_combos.append(layer_combos)
 
-                activation_architecture_tuple = tuple(tuple(layer) for layer in activation_architecture)
-                activation_architectures.add(activation_architecture_tuple)
+        # Take the Cartesian product across layers to get full activation configurations
+        for layers_combo in product(*per_layer_combos):
+            # layers_combo is e.g. (('relu','relu','sigmoid','sigmoid'),
+            #                       ('tanh','tanh','tanh','tanh','tanh','tanh'))
+            activation_architecture = [list(layer) for layer in layers_combo]
+            activation_architecture_tuple = tuple(tuple(layer) for layer in activation_architecture)
+            activation_architectures.add(activation_architecture_tuple)
 
-    args_list = []
-    for activation_architecture in activation_architectures:
-        args_list.append((activation_architecture, num_epochs, batch_size, n_trials))
+    print(f"Testing {len(activation_architectures)} activation configurations across all architectures...")
 
-    num_processes = 8 # optimal seem to be around 8 (measured on M2 max for 50 combinations)
-    #                Processing time
-    #       2 epochs   |    10 epochs
-    # -------------------------------------
-    #  4 :   211.06    |     1072.92
-    #  6 :   149.22    |     856.79
-    #  8 :   136.34    |     759.64
-    #  10:   116.30    |     816.22
-    #  12:   125.13    |     689.13
+    args_list = [
+        (activation_architecture, num_epochs, batch_size, n_trials)
+        for activation_architecture in activation_architectures
+    ]
 
-
+    num_processes = 10
     print(f'Processing using {num_processes} processes over {num_epochs} epochs and {n_trials} trials...')
 
     with multiprocessing.Pool(processes=num_processes) as pool:
-        parallel_results = list(tqdm(pool.imap_unordered(process_activation_combination, args_list), total=len(args_list)))
+        parallel_results = list(tqdm(
+            pool.imap_unordered(process_activation_combination, args_list),
+            total=len(args_list)
+        ))
 
     # Flatten the list of lists
     flattened_results = [item for sublist in parallel_results for item in sublist]
@@ -268,7 +252,7 @@ if __name__ == '__main__':
     # Convert into a DataFrame
     result_df = pd.DataFrame(flattened_results)
 
-    file_name = f'results_{num_epochs}.csv'
+    file_name = f'results_unordered_{num_epochs}.csv'
     try:
         df = pd.read_csv(file_name)
     except FileNotFoundError:
@@ -282,5 +266,5 @@ if __name__ == '__main__':
     df.to_csv(file_name, index=False)
 
     best_row = df.loc[df['best_accuracy'].idxmax()]
-    print(f'Best activation function combination: {best_row["activation_funcs"]}')
+    print(f'Best activation function combination: {best_row["activation_functions"]}')
     print(f'Best average validation accuracy: {best_row["best_accuracy"]*100:.2f}%')

@@ -14,7 +14,6 @@ from tqdm import tqdm
 import pandas as pd
 
 transform = transforms.Compose([transforms.ToTensor()])
-
 TRAIN_DATASET = datasets.MNIST(root='../datasets', train=True, download=True, transform=transform)
 TEST_DATASET = datasets.MNIST(root='../datasets', train=False, download=True, transform=transform)
 DEVICE = torch.device('cpu')

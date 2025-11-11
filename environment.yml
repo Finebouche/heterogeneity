@@ -17,6 +17,6 @@ dependencies:
       - torch
       - torchvision
       - torchaudio
-      - "gymnasium[all]"==1.0.0
+      - "gymnasium[all]"
       - git+https://github.com/DLR-RM/stable-baselines3.git@8f0b488
       - imecilabt-gpulab-cli

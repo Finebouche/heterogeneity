@@ -9,16 +9,26 @@ import itertools
 from itertools import combinations_with_replacement, product
 
 from het_network import HetNetwork
-import multiprocessing
+import torch.multiprocessing as mp
+
 from tqdm import tqdm
 import pandas as pd
 
 transform = transforms.Compose([transforms.ToTensor()])
-TRAIN_DATASET = datasets.MNIST(root='../datasets', train=True, download=True, transform=transform)
-TEST_DATASET = datasets.MNIST(root='../datasets', train=False, download=True, transform=transform)
+TRAIN_DATASET = None
+TEST_DATASET = None
 DEVICE = torch.device('cpu')
 
+def init_datasets():
+    global TRAIN_DATASET, TEST_DATASET
+    if TRAIN_DATASET is None or TEST_DATASET is None:
+        transform = transforms.Compose([transforms.ToTensor()])
+        TRAIN_DATASET = datasets.MNIST(root='../datasets', train=True, download=True, transform=transform)
+        TEST_DATASET = datasets.MNIST(root='../datasets', train=False, download=True, transform=transform)
+
 def load_data(batch_size, train_indices=None, val_indices=None):
+    init_datasets()
+
     if train_indices is not None and val_indices is not None:
         train_dataset = Subset(TRAIN_DATASET, train_indices)
         val_dataset = Subset(TRAIN_DATASET, val_indices)
@@ -176,6 +186,8 @@ def process_activation_combination(args):
     return results  # list of dictionaries
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn', force=True)
+
     num_epochs = 10
     batch_size = 128
     n_trials = 5
@@ -239,7 +251,7 @@ if __name__ == '__main__':
     num_processes = 10
     print(f'Processing using {num_processes} processes over {num_epochs} epochs and {n_trials} trials...')
 
-    with multiprocessing.Pool(processes=num_processes) as pool:
+    with mp.Pool(processes=num_processes) as pool:
         parallel_results = list(tqdm(
             pool.imap_unordered(process_activation_combination, args_list),
             total=len(args_list)

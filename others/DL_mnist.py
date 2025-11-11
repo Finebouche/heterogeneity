@@ -242,12 +242,42 @@ if __name__ == '__main__':
     num_processes = 10
     print(f'Processing using {num_processes} processes over {num_epochs} epochs and {n_trials} trials...')
 
-    with mp.Pool(processes=num_processes) as pool:
-        parallel_results = list(tqdm(
-            pool.imap_unordered(process_activation_combination, args_list),
-            total=len(args_list)
-        ))
+    import time
 
+    with mp.Pool(processes=num_processes) as pool:
+        parallel_results = []
+        total = len(args_list)
+        start_time = time.time()
+
+        for i, res in enumerate(pool.imap_unordered(process_activation_combination, args_list), 1):
+            parallel_results.append(res)
+
+            # "dumb" progress logging with ETA
+            if i == 1 or i % 10 == 0 or i == total:
+                elapsed = time.time() - start_time
+                avg_per_conf = elapsed / i
+                remaining = avg_per_conf * (total - i)
+
+
+                # simple hh:mm:ss formatting
+                def fmt(t):
+                    t = int(t)
+                    h = t // 3600
+                    m = (t % 3600) // 60
+                    s = t % 60
+                    if h > 0:
+                        return f"{h:d}h{m:02d}m{s:02d}s"
+                    elif m > 0:
+                        return f"{m:d}m{s:02d}s"
+                    else:
+                        return f"{s:d}s"
+
+
+                print(
+                    f"Finished {i}/{total} configurations "
+                    f"(elapsed {fmt(elapsed)}, ETA {fmt(remaining)})",
+                    flush=True
+                )
     # Flatten the list of lists
     flattened_results = [item for sublist in parallel_results for item in sublist]
 

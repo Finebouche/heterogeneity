@@ -2,7 +2,6 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
-from torch.optim import Adam
 
 import numpy as np
 import itertools
@@ -33,9 +32,7 @@ def load_data(batch_size, train_indices=None, val_indices=None):
         return train_loader, test_loader
 
 def train(model, device, train_loader, criterion, optimizer):
-    """
-    Train the model for one epoch.
-    """
+    """ Train the model for one epoch."""
     model.train()
     total_loss = 0
     total_correct = 0
@@ -66,9 +63,6 @@ def train(model, device, train_loader, criterion, optimizer):
     return avg_loss, accuracy
 
 def evaluate(model, device, loader, criterion):
-    """
-    Evaluate the model on the given dataset.
-    """
     model.eval()
     total_loss = 0
     total_correct = 0
@@ -94,42 +88,8 @@ def evaluate(model, device, loader, criterion):
     accuracy = total_correct / len(loader.dataset)
     return avg_loss, accuracy
 
-def train_MNIST_model(num_neurons, activation_funcs, train_loader, test_loader, num_epochs=1):
-
-    device = DEVICE
-
-    # Hyperparameters
-    input_dim = 28 * 28  # MNIST images are 28x28 pixels
-    num_classes = 10     # MNIST has 10 classes
-
-
-    model = HetNetwork(
-        input_dim=input_dim,
-        output_dim=num_classes,
-        architecture=[num_neurons],            # single layer with num_neurons
-        activation_funcs=[list(activation_funcs)]  # wrap the tuple/list into another list
-    )
-    model.to(device)
-
-    learning_rate = 1e-3
-    criterion = nn.CrossEntropyLoss()
-    optimizer = Adam(model.parameters(), lr=learning_rate)
-
-    # Training loop
-    for epoch in range(1, num_epochs + 1):
-        train_loss, train_accuracy = train(
-            model, device, train_loader, criterion, optimizer
-        )
-        test_loss, test_accuracy = evaluate(
-            model, device, test_loader, criterion
-        )
-
-    return test_accuracy
-
 def process_activation_combination(args):
-    """
-    This function will handle one set of activation functions for all given architectures.
-    """
+    """This function will handle one set of activation functions / architectures."""
     activation_architecture, num_epochs, batch_size, n_trials = args
     architecture = [len(layer) for layer in activation_architecture]
     activation_funcs = [act for layer in activation_architecture for act in layer]
@@ -153,8 +113,11 @@ def process_activation_combination(args):
             output_dim=num_classes,
             architecture=architecture,
             activation_funcs=activation_architecture
-        )
-        model.to(device)
+        ).to(device)
+        try:
+            model = torch.compile(model)
+        except Exception:
+            pass
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
         # Train and evaluate
@@ -183,16 +146,18 @@ if __name__ == '__main__':
     batch_size = 128
     n_trials = 5
 
-    activation_functions = ['sigmoid', 'tanh', 'relu', 'softplus', 'leaky_relu']
+    activation_functions = ['tanh', 'relu', 'softplus', 'leaky_relu']
 
-    number_of_neurons = 10          # total neurons
-    min_neurons_per_layer = 4       # minimum per layer
+    number_of_neurons = 12          # total neurons
+    min_neurons_per_layer = 5       # minimum per layer
+    min_layers = 2                  # minimum number of layers
     max_layers = 2                  # maximum number of layers you want
 
     architectures = []
 
-    for n_layers in range(1, max_layers + 1):
-        # skip architectures that cannot satisfy the minimum constraint
+    # enumerate all layer counts that satisfy the min constraints
+    for n_layers in range(min_layers, max_layers + 1):
+        # skip architectures that cannot satisfy the per-layer minimum
         if n_layers * min_neurons_per_layer > number_of_neurons:
             continue
 
@@ -203,8 +168,8 @@ if __name__ == '__main__':
             # distribute the remaining neurons after giving min_neurons_per_layer to each layer
             remaining = number_of_neurons - n_layers * min_neurons_per_layer
 
-            # compositions of "remaining" into n_layers non-negative parts
-            # using stars-and-bars via combinations
+            # compositions of "remaining" into n_layers non-negative parts (stars and bars)
+            # each solution 'extras' gives per-layer extra neurons on top of the minimum
             for cuts in itertools.combinations(range(remaining + n_layers - 1), n_layers - 1):
                 cuts_tuple = (-1,) + cuts + (remaining + n_layers - 1,)
                 extras = [cuts_tuple[i + 1] - cuts_tuple[i] - 1 for i in range(n_layers)]
@@ -239,45 +204,15 @@ if __name__ == '__main__':
         for activation_architecture in activation_architectures
     ]
 
-    num_processes = 10
+    num_processes = 12
     print(f'Processing using {num_processes} processes over {num_epochs} epochs and {n_trials} trials...')
 
-    import time
-
     with mp.Pool(processes=num_processes) as pool:
-        parallel_results = []
-        total = len(args_list)
-        start_time = time.time()
+        parallel_results = list(tqdm(
+            pool.imap_unordered(process_activation_combination, args_list),
+            total=len(args_list)
+        ))
 
-        for i, res in enumerate(pool.imap_unordered(process_activation_combination, args_list), 1):
-            parallel_results.append(res)
-
-            # "dumb" progress logging with ETA
-            if i == 1 or i % 10 == 0 or i == total:
-                elapsed = time.time() - start_time
-                avg_per_conf = elapsed / i
-                remaining = avg_per_conf * (total - i)
-
-
-                # simple hh:mm:ss formatting
-                def fmt(t):
-                    t = int(t)
-                    h = t // 3600
-                    m = (t % 3600) // 60
-                    s = t % 60
-                    if h > 0:
-                        return f"{h:d}h{m:02d}m{s:02d}s"
-                    elif m > 0:
-                        return f"{m:d}m{s:02d}s"
-                    else:
-                        return f"{s:d}s"
-
-
-                print(
-                    f"Finished {i}/{total} configurations "
-                    f"(elapsed {fmt(elapsed)}, ETA {fmt(remaining)})",
-                    flush=True
-                )
     # Flatten the list of lists
     flattened_results = [item for sublist in parallel_results for item in sublist]
 
@@ -299,4 +234,4 @@ if __name__ == '__main__':
 
     best_row = df.loc[df['best_accuracy'].idxmax()]
     print(f'Best activation function combination: {best_row["activation_functions"]}')
-    print(f'Best average validation accuracy: {best_row["best_accuracy"]*100:.2f}%')
+    print(f'Best test accuracy: {best_row["best_accuracy"]*100:.2f}%')

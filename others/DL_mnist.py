@@ -230,6 +230,8 @@ if __name__ == "__main__":
         jobs.append((comp, architecture, num_epochs, batch_size, n_trials, base_seed))
     results = []
     total_jobs = len(jobs)
+    chunksize = max(1, len(jobs) // (num_processes * 8))
+
     # Run parallel evaluation with initializer
     if num_processes > 1:
         with mp.Pool(processes=num_processes, initializer=_pool_init, initargs=(batch_size,)) as pool:
@@ -238,6 +240,7 @@ if __name__ == "__main__":
             for res in pool.imap_unordered(process_activation_composition, jobs, chunksize=chunksize):
                 results.append(res)
                 completed += 1
+                # Print progress every 50 jobs (or on the last job), flush immediately
                 if completed % 50 == 0 or completed == total_jobs:
                     print(f"Completed {completed}/{total_jobs} jobs", flush=True)
     else:

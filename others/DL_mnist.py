@@ -50,7 +50,6 @@ def _pool_init(batch_size: int) -> None:
     """
     import torch  # ensure torch is imported in subprocess
     torch.set_num_threads(1)
-    torch.set_num_interop_threads(1)
     from torchvision import datasets, transforms
     from torch.utils.data import DataLoader
     # Use download=False to avoid racing downloads in multiple processes
@@ -141,7 +140,6 @@ def process_activation_composition(args):
     # Limit threads again inside worker
     import torch  # local import for subprocess context
     torch.set_num_threads(1)
-    torch.set_num_interop_threads(1)
     # Obtain loaders from global pool-initialized dictionary
     train_loader, test_loader = load_data(batch_size)
     input_dim = 28 * 28
@@ -195,7 +193,7 @@ if __name__ == "__main__":
     num_processes = 12
     base_seed = 12345
     activation_functions = ["tanh", "relu", "softplus", "leaky_relu"]
-    number_of_neurons = 10
+    number_of_neurons = 12
     min_neurons_per_layer = 5
     min_layers = 2
     max_layers = 2
@@ -234,20 +232,14 @@ if __name__ == "__main__":
     total_jobs = len(jobs)
     # Run parallel evaluation with initializer
     if num_processes > 1:
-        with mp.Pool(
-            processes=num_processes,
-            initializer=_pool_init,
-            initargs=(batch_size,),
-        ) as pool:
+        with mp.Pool(processes=num_processes, initializer=_pool_init, initargs=(batch_size,)) as pool:
+            total_jobs = len(jobs)
             completed = 0
-            with tqdm(total=total_jobs) as pbar:
-                chunksize = max(1, len(jobs) // (num_processes * 8))
-                for res in pool.imap_unordered(process_activation_composition, jobs, chunksize=chunksize):
-                    results.append(res)
-                    completed += 1
-                    pbar.update(1)
-                    if completed % 50 == 0 or completed == total_jobs:
-                        print(f"Completed {completed}/{total_jobs} jobs")
+            for res in pool.imap_unordered(process_activation_composition, jobs, chunksize=chunksize):
+                results.append(res)
+                completed += 1
+                if completed % 50 == 0 or completed == total_jobs:
+                    print(f"Completed {completed}/{total_jobs} jobs", flush=True)
     else:
         # Serial fallback
         with tqdm(total=total_jobs) as pbar:

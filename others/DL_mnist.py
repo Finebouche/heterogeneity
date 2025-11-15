@@ -252,7 +252,7 @@ if __name__ == "__main__":
                 pbar.update(1)
     # Save results to CSV and report best configuration
     df = pd.DataFrame(results)
-    out_csv = f"results_unordered_testonly_{num_epochs}.csv"
+    out_csv = f"results_unordered_{num_epochs}.csv"
     try:
         prev = pd.read_csv(out_csv)
         df = pd.concat([prev, df], ignore_index=True)

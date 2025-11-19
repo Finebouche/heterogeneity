@@ -1,5 +1,4 @@
 import ast
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -105,7 +104,7 @@ if __name__ == '__main__':
         xs = xs + rng.uniform(-jitter, jitter, size=len(xs))
         ys = sub['best_test_accuracy'].to_numpy()
         m = layer_markers.get(nl, 'o')
-        ax.scatter(xs, ys, marker=m, s=8, alpha=0.35, linewidths=0, rasterized=True)
+        ax.scatter(xs, ys, marker=m, s=8, linewidths=0, rasterized=True)
 
     # --- axes, ticks, labels ---
     ax.set_xlim(0.5, len(hetero_values) + 0.5)

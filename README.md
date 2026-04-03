@@ -10,13 +10,6 @@
 	<img src="https://img.shields.io/github/last-commit/Finebouche/heterogeneity" alt="last-commit">
 	<img src="https://img.shields.io/github/languages/top/Finebouche/heterogeneity" alt="repo-top-language">
 </p>
-<p align="center"><!-- default option, no dependency badges. -->
-</p>
-<p align="center">
-	<!-- default option, no dependency badges. -->
-</p>
-<br>
-
 
 ## 📍 Overview
 
@@ -54,14 +47,3 @@ Run heterogeneity using the following command:
 ❯ conda activate het_env
 ```
 
-
-
-## 🎗 License
-
-This project is protected under the [MIT License ](https://choosealicense.com/licenses/mit/) License.
-
----
-
-## 🙌 Acknowledgments
-
-- List any resources, contributors, inspiration, etc. here.
